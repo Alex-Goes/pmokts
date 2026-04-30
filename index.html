@@ -2688,9 +2688,11 @@ function renderFluxo(p) {
         <input type="date" class="crono-date-input" id="crono-real-${i}"
           value="${rc[chaveReal]||''}" data-key="${chaveReal}">
       </td>
-      <td id="crono-delta-${i}" style="display:flex;align-items:center;gap:6px">
-        <span class="crono-delta empty">—</span>
-        <button class="crono-na-btn" onclick="toggleNA(${i})" title="Marcar como Não Aplicável">N/A</button>
+      <td id="crono-delta-${i}">
+        <div style="display:flex;align-items:center;gap:6px;white-space:nowrap">
+          <span class="crono-delta empty">—</span>
+          <button class="crono-na-btn" onclick="toggleNA(${i})" title="Marcar como Não Aplicável — atividade não será executada">N/A</button>
+        </div>
       </td>
     </tr>`;
   }).join('');
@@ -3171,10 +3173,23 @@ function resetPrevisto(i) {
 function atualizarDelta(el, previsto, realizado) {
   if (!el) return;
   const delta = diffDias(previsto, realizado);
-  if (delta === null) { el.innerHTML = `<span class="crono-delta empty">—</span>`; return; }
-  if (delta === 0)    { el.innerHTML = `<span class="crono-delta ok">✓ No prazo</span>`; return; }
-  if (delta > 0)      { el.innerHTML = `<span class="crono-delta late">+${delta}d atraso</span>`; return; }
-                        el.innerHTML = `<span class="crono-delta early">${delta}d antecip.</span>`;
+  // Atualiza apenas o span de delta — preserva o botão N/A no mesmo td
+  const span = el.querySelector('.crono-delta') || el.querySelector('span');
+  const novoSpan = document.createElement('span');
+
+  if (delta === null)  { novoSpan.className = 'crono-delta empty'; novoSpan.textContent = '—'; }
+  else if (delta === 0){ novoSpan.className = 'crono-delta ok';    novoSpan.textContent = '✓ No prazo'; }
+  else if (delta > 0)  { novoSpan.className = 'crono-delta late';  novoSpan.textContent = `+${delta}d atraso`; }
+  else                 { novoSpan.className = 'crono-delta early'; novoSpan.textContent = `${delta}d antecip.`; }
+
+  if (span) {
+    span.replaceWith(novoSpan);
+  } else {
+    // Fallback: insere no início do div interno
+    const div = el.querySelector('div');
+    if (div) div.prepend(novoSpan);
+    else el.prepend(novoSpan);
+  }
 }
 
 /**
