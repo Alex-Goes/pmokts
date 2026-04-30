@@ -1240,6 +1240,63 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
     </div>
   </div>
 </div>
+<!-- ══ MODAL MINHA CONTA ══════════════════════════════════════════════ -->
+<div class="admin-overlay" id="modal-minha-conta">
+  <div class="admin-modal" style="width:440px">
+    <h2>🔑 Minha Conta</h2>
+
+    <div style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:20px">
+      <div class="login-avatar" id="mc-avatar" style="width:44px;height:44px;font-size:16px;background:var(--accent2);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;flex-shrink:0">?</div>
+      <div>
+        <div style="font-weight:700;font-size:14px" id="mc-nome">—</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">
+          <span id="mc-usuario" style="color:var(--accent)">—</span>
+          <span style="margin:0 6px;color:var(--text3)">·</span>
+          <span id="mc-role-badge" class="role-badge">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      Alterar Senha <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+
+    <div class="login-error" id="mc-error" style="margin-bottom:12px"></div>
+    <div id="mc-success" style="background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--green);margin-bottom:12px;display:none">
+      ✅ Senha alterada com sucesso!
+    </div>
+
+    <div class="form-field" style="margin-bottom:12px">
+      <label>Senha Atual</label>
+      <input type="password" id="mc-senha-atual" placeholder="Digite sua senha atual" autocomplete="current-password">
+    </div>
+    <div class="form-field" style="margin-bottom:12px">
+      <label>Nova Senha</label>
+      <input type="password" id="mc-senha-nova" placeholder="Mínimo 4 caracteres" autocomplete="new-password"
+        oninput="avaliarForcaSenha(this.value)">
+    </div>
+    <div class="form-field" style="margin-bottom:16px">
+      <label>Confirmar Nova Senha</label>
+      <input type="password" id="mc-senha-conf" placeholder="Repita a nova senha" autocomplete="new-password"
+        onkeydown="if(event.key==='Enter')alterarSenha()">
+    </div>
+
+    <div id="mc-forca-wrap" style="margin-bottom:16px;display:none">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px">
+        <span>Força da senha</span><span id="mc-forca-label">—</span>
+      </div>
+      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden">
+        <div id="mc-forca-bar" style="height:100%;border-radius:3px;transition:width .3s,background .3s;width:0%"></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeMinhaConta()">Fechar</button>
+      <button class="btn btn-primary" onclick="alterarSenha()">🔑 Alterar Senha</button>
+    </div>
+  </div>
+</div>
+
 <div class="admin-overlay" id="admin-overlay">
   <div class="admin-modal">
     <h2>👤 Gerenciar Usuários</h2>
@@ -1283,6 +1340,7 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
     </div>
     <button class="pill" id="btn-admin-users" onclick="openAdminPanel()" style="display:none" title="Gerenciar usuários">⚙ Usuários</button>
     <button class="pill" id="btn-feriados" onclick="openFeriados()" style="display:none" title="Feriados e dias úteis">📅 Feriados</button>
+    <button class="pill" onclick="openMinhaConta()" title="Alterar senha e dados da conta">🔑 Minha Conta</button>
     <button class="pill" onclick="fazerLogout()" title="Sair">🚪 Sair</button>
   </div>
 </div>
@@ -3814,6 +3872,7 @@ function renderAdminUsers() {
         <div class="user-row-meta">@${u.usuario} · Criado em ${u.criadoEm?new Date(u.criadoEm).toLocaleDateString('pt-BR'):'—'}</div>
       </div>
       <span class="role-badge ${roleClass[u.role]||'role-viewer'}">${roleLabel[u.role]||u.role}</span>
+      <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px;color:var(--yellow);border-color:rgba(255,214,0,.3)" onclick="adminResetSenha('${u.id}')" title="Redefinir senha">🔑</button>
       ${u.id !== 'admin' ? `<button class="btn btn-danger" style="padding:5px 10px;font-size:11px" onclick="removerUsuario('${u.id}')">🗑</button>` : '<span style="font-size:11px;color:var(--text3);padding:0 8px">—</span>'}
     </div>`).join('');
 }
@@ -4151,6 +4210,156 @@ function removerFeriado(i) {
   toast('🗑 Feriado removido.');
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// MINHA CONTA — Alteração de senha pelo próprio usuário
+// ═══════════════════════════════════════════════════════════════════
+
+function openMinhaConta() {
+  if (!currentUser) { toast('⚠️ Faça login primeiro.'); return; }
+
+  const roleLabels = { admin:'Administrador', editor:'Editor', viewer:'Visualizador' };
+  const roleClass  = { admin:'role-admin', editor:'role-editor', viewer:'role-viewer' };
+  const colors     = { admin:'var(--purple)', editor:'var(--accent)', viewer:'var(--green)' };
+  const initials   = currentUser.nome.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+
+  document.getElementById('mc-avatar').textContent    = initials;
+  document.getElementById('mc-avatar').style.background = colors[currentUser.role] || 'var(--accent2)';
+  document.getElementById('mc-nome').textContent      = currentUser.nome;
+  document.getElementById('mc-usuario').textContent   = '@' + currentUser.usuario;
+  document.getElementById('mc-role-badge').textContent= roleLabels[currentUser.role] || currentUser.role;
+  document.getElementById('mc-role-badge').className  = `role-badge ${roleClass[currentUser.role]||'role-viewer'}`;
+
+  // Limpa campos
+  ['mc-senha-atual','mc-senha-nova','mc-senha-conf'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('mc-error').classList.remove('show');
+  document.getElementById('mc-error').textContent = '';
+  document.getElementById('mc-success').style.display = 'none';
+  document.getElementById('mc-forca-wrap').style.display = 'none';
+
+  document.getElementById('modal-minha-conta').classList.add('open');
+  setTimeout(() => document.getElementById('mc-senha-atual').focus(), 100);
+}
+
+function closeMinhaConta() {
+  document.getElementById('modal-minha-conta').classList.remove('open');
+}
+
+/**
+ * Avalia a força da senha e atualiza o indicador visual
+ */
+function avaliarForcaSenha(senha) {
+  const wrap  = document.getElementById('mc-forca-wrap');
+  const bar   = document.getElementById('mc-forca-bar');
+  const label = document.getElementById('mc-forca-label');
+
+  if (!senha) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  let score = 0;
+  if (senha.length >= 6)  score++;
+  if (senha.length >= 10) score++;
+  if (/[A-Z]/.test(senha)) score++;
+  if (/[0-9]/.test(senha)) score++;
+  if (/[^A-Za-z0-9]/.test(senha)) score++;
+
+  const niveis = [
+    { pct: 20,  cor: 'var(--red)',    txt: 'Muito fraca'  },
+    { pct: 40,  cor: '#ff6b35',       txt: 'Fraca'        },
+    { pct: 60,  cor: 'var(--yellow)', txt: 'Regular'      },
+    { pct: 80,  cor: '#8bc34a',       txt: 'Boa'          },
+    { pct: 100, cor: 'var(--green)',  txt: 'Forte'        },
+  ];
+  const nivel = niveis[Math.min(score, 4)];
+  bar.style.width      = nivel.pct + '%';
+  bar.style.background = nivel.cor;
+  label.textContent    = nivel.txt;
+  label.style.color    = nivel.cor;
+}
+
+/**
+ * Altera a senha do usuário logado após validar a senha atual
+ */
+async function alterarSenha() {
+  const senhaAtual = document.getElementById('mc-senha-atual').value;
+  const senhaNova  = document.getElementById('mc-senha-nova').value;
+  const senhaConf  = document.getElementById('mc-senha-conf').value;
+  const errEl      = document.getElementById('mc-error');
+  const okEl       = document.getElementById('mc-success');
+
+  errEl.classList.remove('show');
+  errEl.textContent = '';
+  okEl.style.display = 'none';
+
+  // Validações
+  if (!senhaAtual || !senhaNova || !senhaConf) {
+    errEl.textContent = 'Preencha todos os campos.';
+    errEl.classList.add('show'); return;
+  }
+  if (senhaNova.length < 4) {
+    errEl.textContent = 'A nova senha deve ter pelo menos 4 caracteres.';
+    errEl.classList.add('show'); return;
+  }
+  if (senhaNova !== senhaConf) {
+    errEl.textContent = 'A nova senha e a confirmação não coincidem.';
+    errEl.classList.add('show');
+    document.getElementById('mc-senha-conf').focus(); return;
+  }
+
+  // Verifica senha atual
+  const hashAtual = await hashSenha(senhaAtual);
+  if (hashAtual !== currentUser.senhaHash) {
+    errEl.textContent = 'Senha atual incorreta.';
+    errEl.classList.add('show');
+    document.getElementById('mc-senha-atual').value = '';
+    document.getElementById('mc-senha-atual').focus(); return;
+  }
+
+  // Gera novo hash e salva
+  const hashNovo = await hashSenha(senhaNova);
+  const users    = getUsers();
+  const idx      = users.findIndex(u => u.id === currentUser.id);
+  if (idx < 0) { errEl.textContent = 'Usuário não encontrado.'; errEl.classList.add('show'); return; }
+
+  users[idx].senhaHash = hashNovo;
+  saveUsers(users);
+
+  // Atualiza currentUser e sessão em memória
+  currentUser.senhaHash = hashNovo;
+  setSession(currentUser);
+
+  // Limpa campos e exibe sucesso
+  ['mc-senha-atual','mc-senha-nova','mc-senha-conf'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('mc-forca-wrap').style.display = 'none';
+  okEl.style.display = '';
+  toast('🔑 Senha alterada com sucesso!', 3000);
+}
+
+/**
+ * Admin redefine senha de qualquer usuário via prompt
+ */
+async function adminResetSenha(userId) {
+  if (!currentUser || currentUser.role !== 'admin') {
+    toast('⛔ Apenas admins podem redefinir senhas.'); return;
+  }
+  const users   = getUsers();
+  const u       = users.find(x => x.id === userId);
+  if (!u) return;
+
+  const novaSenha = prompt(`Nova senha para @${u.usuario}:\n(mínimo 4 caracteres)`);
+  if (!novaSenha) return;
+  if (novaSenha.length < 4) { toast('⚠️ Senha muito curta — mínimo 4 caracteres.'); return; }
+
+  const hash  = await hashSenha(novaSenha);
+  u.senhaHash = hash;
+  saveUsers(users);
+  renderAdminUsers();
+  toast(`✅ Senha de @${u.usuario} redefinida com sucesso!`);
+}
+
 // ─── INIT ───
 // renderSidebar e openProjeto são chamados por iniciarSistema() após carregar dados
 
@@ -4160,6 +4369,9 @@ document.querySelectorAll('.overlay').forEach(o => {
 });
 document.getElementById('admin-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('admin-overlay')) closeAdminPanel();
+});
+document.getElementById('modal-minha-conta').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-minha-conta')) closeMinhaConta();
 });
 document.getElementById('act-modal-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('act-modal-overlay')) closeActModal();
