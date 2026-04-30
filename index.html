@@ -3685,13 +3685,6 @@ async function hashSenha(senha) {
 }
 
 // Banco de usuários no localStorage
-function getUsers() {
-  return JSON.parse(localStorage.getItem('pmokts_users') || '[]');
-}
-function saveUsers(users) {
-  localStorage.setItem('pmokts_users', JSON.stringify(users));
-}
-
 // Sessão atual
 let currentUser = null;
 
