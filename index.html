@@ -721,6 +721,20 @@ body {
 
 .crono-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
 
+.crono-na-btn {
+  background: none; border: 1px solid var(--border2);
+  border-radius: 5px; cursor: pointer; color: var(--text3);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: .5px;
+  padding: 3px 7px; transition: all .15s; white-space: nowrap;
+}
+.crono-na-btn:hover { border-color: var(--red); color: var(--red); background: rgba(255,23,68,.08); }
+.crono-na-btn.active { border-color: var(--text3); color: var(--text3); background: rgba(255,255,255,.04); }
+
+tr.crono-na td { opacity: 0.35; pointer-events: none; }
+tr.crono-na td:last-child { pointer-events: all; opacity: 1; }
+tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; pointer-events: none; }
+
 /* ─── CÉLULA PREVISTO EDITÁVEL ─── */
 .crono-prev-wrap {
   display: flex; align-items: center; gap: 5px; white-space: nowrap;
@@ -1010,6 +1024,94 @@ body {
 .dg-tl-bar-track { height:14px; background:var(--border); border-radius:7px; overflow:hidden; min-width:100px; position:relative; }
 .dg-tl-bar-fill { height:100%; border-radius:7px; position:absolute; left:0; top:0; display:flex; align-items:center; padding-left:5px; font-size:9px; font-weight:700; color:#fff; white-space:nowrap; transition:width .4s; }
 
+/* ─── MODAL DE ATIVIDADE (obs + histórico + responsável) ─── */
+.act-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  backdrop-filter: blur(4px); z-index: 400;
+  display: none; align-items: center; justify-content: center;
+}
+.act-modal-overlay.open { display: flex; }
+.act-modal {
+  background: var(--panel); border: 1px solid var(--border2);
+  border-radius: 14px; width: 560px; max-width: 95vw;
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  display: flex; flex-direction: column;
+}
+.act-modal-head {
+  padding: 20px 22px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0;
+}
+.act-modal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+.act-modal-close { background: none; border: none; color: var(--text3); font-size: 20px; cursor: pointer; padding: 0 4px; }
+.act-modal-close:hover { color: var(--text); }
+.act-modal-body { padding: 18px 22px; flex: 1; }
+.act-section-title {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent);
+  margin-bottom: 10px; margin-top: 16px; display: flex; align-items: center; gap: 8px;
+}
+.act-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.act-section-title:first-child { margin-top: 0; }
+.act-obs-area {
+  width: 100%; background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 10px 13px; color: var(--text);
+  font-family: 'Barlow', sans-serif; font-size: 13px; line-height: 1.6;
+  resize: vertical; min-height: 80px; outline: none; box-sizing: border-box;
+  transition: border-color .2s;
+}
+.act-obs-area:focus { border-color: var(--accent); }
+.act-resp-select {
+  width: 100%; background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 9px 13px; color: var(--text);
+  font-family: 'Barlow', sans-serif; font-size: 13px; outline: none;
+  transition: border-color .2s; cursor: pointer;
+}
+.act-resp-select:focus { border-color: var(--accent); }
+.act-resp-select option { background: var(--card2); }
+.hist-entry {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 13px; margin-bottom: 7px;
+}
+.hist-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.hist-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.hist-user { font-size: 12px; font-weight: 700; }
+.hist-date { font-size: 10px; color: var(--text3); margin-left: auto; }
+.hist-text { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.hist-diff { font-size: 11px; color: var(--text3); margin-top: 4px; font-style: italic; }
+.act-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0; }
+
+/* ─── BADGE RESPONSÁVEL ─── */
+.crono-resp-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10px; padding: 2px 7px; border-radius: 10px;
+  background: rgba(0,212,255,.1); border: 1px solid rgba(0,212,255,.2);
+  color: var(--accent); cursor: pointer; white-space: nowrap;
+  transition: all .15s;
+}
+.crono-resp-badge:hover { background: rgba(0,212,255,.2); }
+.crono-obs-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; padding: 2px 6px; border-radius: 10px;
+  background: rgba(255,214,0,.1); border: 1px solid rgba(255,214,0,.2);
+  color: var(--yellow); cursor: pointer; white-space: nowrap;
+}
+
+/* ─── GERENCIAR FERIADOS ─── */
+.holiday-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 7px; padding: 8px 12px; margin-bottom: 6px;
+}
+.holiday-row-info { flex: 1; }
+.holiday-row-name { font-size: 12px; font-weight: 600; }
+.holiday-row-date { font-size: 10px; color: var(--text2); margin-top: 1px; }
+.holiday-national { font-size: 9px; color: var(--text3); padding: 1px 6px; border-radius: 3px; background: var(--border); }
+
 /* ─── PRINT ─── */
 @media print {
   .topbar, .sidebar, .tabs, .proj-actions, .topbar-actions, .btn { display: none !important; }
@@ -1077,7 +1179,67 @@ body {
   </div>
 </div>
 
-<!-- ══ PAINEL DE ADMIN DE USUÁRIOS ═══════════════════════════════════════ -->
+<!-- ══ MODAL DE ATIVIDADE (obs + histórico + responsável) ══════════════ -->
+<div class="act-modal-overlay" id="act-modal-overlay">
+  <div class="act-modal">
+    <div class="act-modal-head">
+      <div>
+        <div class="act-modal-title" id="act-modal-nome">—</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px" id="act-modal-formula">—</div>
+      </div>
+      <button class="act-modal-close" onclick="closeActModal()">✕</button>
+    </div>
+    <div class="act-modal-body">
+      <div class="act-section-title">👤 Responsável</div>
+      <select class="act-resp-select" id="act-resp-select">
+        <option value="">— Sem responsável atribuído —</option>
+      </select>
+
+      <div class="act-section-title">📝 Observações</div>
+      <textarea class="act-obs-area" id="act-obs-text"
+        placeholder="Digite observações, instruções, links, ou qualquer informação relevante para esta atividade..."></textarea>
+
+      <div class="act-section-title">🕐 Histórico de Atualizações</div>
+      <div id="act-hist-list">
+        <div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Nenhuma atualização registrada ainda.</div>
+      </div>
+    </div>
+    <div class="act-footer">
+      <button class="btn btn-ghost" onclick="closeActModal()">Fechar</button>
+      <button class="btn btn-primary" onclick="salvarAtividade()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL DE FERIADOS ═══════════════════════════════════════════════ -->
+<div class="admin-overlay" id="modal-feriados">
+  <div class="admin-modal" style="width:580px">
+    <h2>📅 Gerenciar Feriados</h2>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">
+      Os feriados afetam o cálculo de <b>dias úteis</b> no cronograma. Feriados nacionais são calculados automaticamente.
+    </div>
+
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:10px">
+      Feriados Nacionais do Ano Atual (automáticos)
+    </div>
+    <div id="holiday-national-list" style="margin-bottom:16px"></div>
+
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--yellow);margin-bottom:10px">
+      Feriados Personalizados
+    </div>
+    <div id="holiday-custom-list" style="margin-bottom:12px"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-bottom:14px">
+      <div class="form-field"><label>Nome do Feriado</label><input type="text" id="h-nome" placeholder="Ex: Aniversário da Cidade"></div>
+      <div class="form-field"><label>Data</label><input type="date" id="h-data"></div>
+      <button class="btn btn-primary" onclick="adicionarFeriado()" style="align-self:flex-end;margin-bottom:1px">+ Adicionar</button>
+    </div>
+
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal('modal-feriados')">Fechar</button>
+    </div>
+  </div>
+</div>
 <div class="admin-overlay" id="admin-overlay">
   <div class="admin-modal">
     <h2>👤 Gerenciar Usuários</h2>
@@ -1120,6 +1282,7 @@ body {
       </div>
     </div>
     <button class="pill" id="btn-admin-users" onclick="openAdminPanel()" style="display:none" title="Gerenciar usuários">⚙ Usuários</button>
+    <button class="pill" id="btn-feriados" onclick="openFeriados()" style="display:none" title="Feriados e dias úteis">📅 Feriados</button>
     <button class="pill" onclick="fazerLogout()" title="Sair">🚪 Sair</button>
   </div>
 </div>
@@ -1603,10 +1766,12 @@ function renderSidebar() {
  * Independe das etapas de execução.
  */
 function calcFluxoPct(proj) {
-  const rc = proj.cronoRealizado || {};
-  const total = CRONO_LINHAS.length; // sempre 10
+  const rc  = proj.cronoRealizado || {};
+  const na  = proj.cronoNA || {};
+  const aplicaveis = CRONO_LINHAS.filter(l => !na[l[0]]);
+  const total = aplicaveis.length;
   if (!total) return 0;
-  const realizadas = CRONO_LINHAS.filter(l => !!rc[l[1]]).length;
+  const realizadas = aplicaveis.filter(l => !!rc[l[1]]).length;
   return Math.round((realizadas / total) * 100);
 }
 
@@ -2161,22 +2326,138 @@ function toast(msg, dur=3000) {
  * Adiciona N dias corridos a uma data (string YYYY-MM-DD ou Date)
  * Equivalente direto às fórmulas =H4+16, =I4+3, etc.
  */
-function addDias(dataBase, n) {
-  if (!dataBase) return '';
-  const d = new Date(dataBase + 'T00:00:00');
-  d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0];
+// ═══════════════════════════════════════════════════════════════════
+// MOTOR DE DIAS ÚTEIS + FERIADOS
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Retorna objeto com feriados nacionais fixos + feriados personalizados do sistema.
+ * Feriados fixos: baseados nas leis federais brasileiras.
+ * Feriados personalizados: salvos em localStorage/Supabase.
+ */
+function getHolidays(ano) {
+  // Feriados nacionais fixos (data no formato MM-DD)
+  const fixos = [
+    '01-01', // Confraternização Universal
+    '04-21', // Tiradentes
+    '05-01', // Dia do Trabalho
+    '09-07', // Independência
+    '10-12', // Nossa Senhora Aparecida
+    '11-02', // Finados
+    '11-15', // Proclamação da República
+    '11-20', // Consciência Negra
+    '12-25', // Natal
+  ];
+
+  // Cálculo da Páscoa (algoritmo de Meeus/Jones/Butcher)
+  function pascoa(y) {
+    const a = y % 19, b = Math.floor(y/100), c = y % 100;
+    const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+    const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15) % 30;
+    const i = Math.floor(c/4), k = c % 4;
+    const l = (32+2*e+2*i-h-k) % 7;
+    const m = Math.floor((a+11*h+22*l)/451);
+    const mes = Math.floor((h+l-7*m+114)/31);
+    const dia = ((h+l-7*m+114) % 31) + 1;
+    return new Date(y, mes-1, dia);
+  }
+
+  const p = pascoa(ano);
+  const addD = (d, n) => { const r=new Date(d); r.setDate(r.getDate()+n); return r; };
+  const fmt  = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  const moveis = [
+    fmt(addD(p, -47)),  // Carnaval segunda
+    fmt(addD(p, -46)),  // Carnaval terça
+    fmt(addD(p, -2)),   // Sexta-feira Santa
+    fmt(p),             // Páscoa
+    fmt(addD(p, 60)),   // Corpus Christi
+  ];
+
+  // Feriados personalizados do sistema (formato YYYY-MM-DD)
+  const custom = getCustomHolidays();
+  const customSet = new Set(custom.map(h => h.data));
+
+  // Conjunto final de feriados para o ano
+  const set = new Set([
+    ...fixos.map(d => `${ano}-${d}`),
+    ...moveis.map(d => `${ano}-${d}`),
+    ...customSet,
+  ]);
+
+  return set;
+}
+
+// Feriados personalizados (salvos no localStorage)
+function getCustomHolidays() {
+  return JSON.parse(localStorage.getItem('pmokts_holidays') || '[]');
+}
+function saveCustomHolidays(list) {
+  localStorage.setItem('pmokts_holidays', JSON.stringify(list));
 }
 
 /**
- * Calcula diferença em dias entre dois dates (realizado - previsto)
- * Positivo = atraso, Negativo = antecipação, 0 = no prazo
+ * Verifica se uma data (YYYY-MM-DD) é dia útil (não é fim de semana nem feriado)
  */
-function diffDias(previsto, realizado) {
+function isDiaUtil(dataStr) {
+  const d = new Date(dataStr + 'T00:00:00');
+  const dow = d.getDay(); // 0=dom, 6=sab
+  if (dow === 0 || dow === 6) return false;
+  const ano = d.getFullYear();
+  const holidays = getHolidays(ano);
+  return !holidays.has(dataStr);
+}
+
+/**
+ * Adiciona N dias ÚTEIS a uma data base (pula fins de semana e feriados)
+ * Substitui addDias() para cálculos de cronograma
+ */
+function addDiasUteis(dataBase, n) {
+  if (!dataBase || n === 0) return dataBase;
+  let d = new Date(dataBase + 'T00:00:00');
+  let count = 0;
+  const step = n > 0 ? 1 : -1;
+  while (count < Math.abs(n)) {
+    d.setDate(d.getDate() + step);
+    const str = d.toISOString().split('T')[0];
+    if (isDiaUtil(str)) count++;
+  }
+  // Garante que a data resultante também seja dia útil
+  let result = d.toISOString().split('T')[0];
+  while (!isDiaUtil(result)) {
+    d.setDate(d.getDate() + 1);
+    result = d.toISOString().split('T')[0];
+  }
+  return result;
+}
+
+/**
+ * addDias mantido para retrocompatibilidade — agora usa dias úteis
+ */
+function addDias(dataBase, n) {
+  return addDiasUteis(dataBase, n);
+}
+
+/**
+ * Calcula diferença em DIAS ÚTEIS entre dois dates (realizado - previsto)
+ */
+function diffDiasUteis(previsto, realizado) {
   if (!previsto || !realizado) return null;
-  const p = new Date(previsto + 'T00:00:00');
-  const r = new Date(realizado + 'T00:00:00');
-  return Math.round((r - p) / 86400000);
+  let p = new Date(previsto + 'T00:00:00');
+  let r = new Date(realizado + 'T00:00:00');
+  const step = r >= p ? 1 : -1;
+  let count = 0;
+  let cur = new Date(p);
+  while (cur.toISOString().split('T')[0] !== r.toISOString().split('T')[0]) {
+    cur.setDate(cur.getDate() + step);
+    const str = cur.toISOString().split('T')[0];
+    if (isDiaUtil(str)) count += step;
+  }
+  return count;
+}
+
+function diffDias(previsto, realizado) {
+  return diffDiasUteis(previsto, realizado);
 }
 
 /**
@@ -2240,9 +2521,11 @@ function renderFluxo(p) {
   const overrides = p.cronoOverride || {};
   const hoje    = new Date().toISOString().split('T')[0];
 
-  // ── Calcular status de cada etapa ──────────────────────────────────────────
+  // ── Calcular status de cada etapa (ignora N/A) ────────────────────────────
+  const cronoNA = p.cronoNA || {};
   const etapasStatus = CRONO_LINHAS.map((linha, i) => {
     const [chaveCalc, chaveReal, icone, nome] = linha;
+    if (cronoNA[chaveCalc]) return { i, icone, nome, status: 'N/A', cor: 'var(--text3)', bg: 'rgba(255,255,255,.03)', previsto:'', realizado:'', delta:null, isNA:true };
     // Override manual tem prioridade sobre o calculado
     const previsto  = overrides[chaveCalc] || crono[chaveCalc] || '';
     const realizado = rc[chaveReal] || '';
@@ -2269,12 +2552,13 @@ function renderFluxo(p) {
   });
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
-  const total      = etapasStatus.length;
-  const concluidas = etapasStatus.filter(e => e.realizado).length;
+  const naoAplicaveis = etapasStatus.filter(e => e.isNA).length;
+  const total      = etapasStatus.filter(e => !e.isNA).length;
+  const concluidas = etapasStatus.filter(e => e.realizado && !e.isNA).length;
   const atrasadas  = etapasStatus.filter(e => e.status === 'Atrasado').length;
   const antecipadas= etapasStatus.filter(e => e.status === 'Antecipado').length;
-  const pendentes  = etapasStatus.filter(e => e.status === 'Pendente' || e.status === 'Sem Data').length;
-  const pctGeral   = Math.round((concluidas / total) * 100);
+  const pendentes  = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
+  const pctGeral   = total > 0 ? Math.round((concluidas / total) * 100) : 0;
 
   // ── Kanban por status ─────────────────────────────────────────────────────
   const kanbanCols = [
@@ -2351,34 +2635,63 @@ function renderFluxo(p) {
   // (overrides já declarado no topo da função — reutiliza a mesma variável)
   const linhasHTML = CRONO_LINHAS.map((linha, i) => {
     const [chaveCalc, chaveReal, icone, nome, formula, highlight] = linha;
-    const rowStyle = highlight ? 'background:rgba(0,102,255,0.05);' : '';
-    const hasOverride = !!overrides[chaveCalc];
-    // Valor inicial do previsto: override manual OU calculado (preenchido pelo bind depois)
+    const isNA = !!(p.cronoNA && p.cronoNA[chaveCalc]);
+    const rowStyle = isNA
+      ? 'opacity:.35;'
+      : (highlight ? 'background:rgba(0,102,255,0.05);' : '');
+    const hasOverride = !isNA && !!overrides[chaveCalc];
     const prevVal = overrides[chaveCalc] || (crono[chaveCalc] || '');
+
+    if (isNA) {
+      return `<tr style="${rowStyle}" id="crono-row-${i}" class="crono-na">
+        <td style="color:var(--text3);font-weight:700;font-family:'Barlow Condensed',sans-serif">${String(i+1).padStart(2,'0')}</td>
+        <td style="font-size:13px;text-decoration:line-through;color:var(--text3)">${icone} ${nome}</td>
+        <td><span class="crono-formula-badge">${formula}</span></td>
+        <td><span style="font-size:11px;color:var(--text3);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px">N/A</span></td>
+        <td><span style="font-size:11px;color:var(--text3)">—</span></td>
+        <td>
+          <button class="crono-na-btn active" onclick="toggleNA(${i})" title="Reativar esta atividade" style="pointer-events:all;opacity:1">
+            ↩ Reativar
+          </button>
+        </td>
+      </tr>`;
+    }
+
+    const obsData  = (p.cronoObs  && p.cronoObs[chaveCalc])  || null;
+    const respId   = (p.cronoResp && p.cronoResp[chaveCalc]) || '';
+    const histData = (p.cronoHist && p.cronoHist[chaveCalc]) || [];
+    const respNome = respId ? ((getUsers().find(u=>u.id===respId)||{}).nome||respId).split(' ')[0] : '';
+
     return `<tr style="${rowStyle}" id="crono-row-${i}">
       <td style="color:var(--text3);font-weight:700;font-family:'Barlow Condensed',sans-serif">${String(i+1).padStart(2,'0')}</td>
-      <td style="font-weight:${highlight?700:500};font-size:13px">${icone} ${nome}</td>
-      <td><span class="crono-formula-badge">${formula}</span></td>
+      <td style="font-weight:${highlight?700:500};font-size:13px">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+          <span style="cursor:pointer" onclick="openActModal(${i})">${icone} ${nome}</span>
+          ${respNome?`<span class="crono-resp-badge" onclick="openActModal(${i})">👤 ${respNome}</span>`:''}
+          ${obsData?`<span class="crono-obs-badge" onclick="openActModal(${i})">💬 obs</span>`:''}
+          ${histData.length?`<span class="crono-obs-badge" onclick="openActModal(${i})" style="color:var(--text3);border-color:rgba(255,255,255,.1)">🕐 ${histData.length}</span>`:''}
+        </div>
+      </td>
+      <td><span class="crono-formula-badge" style="cursor:pointer" onclick="openActModal(${i})" title="Abrir detalhes">${formula}</span></td>
       <td id="crono-prev-${i}">
         <div class="crono-prev-wrap">
           <span class="crono-override-dot${hasOverride?' visible':''}" id="crono-dot-${i}" title="Data editada manualmente"></span>
           <input type="date" class="crono-prev-input${hasOverride?' overridden':''}"
-            id="crono-prev-input-${i}"
-            value="${prevVal}"
-            title="${hasOverride?'Data editada manualmente — clique em 🔄 para restaurar o cálculo automático':'Data calculada automaticamente — edite se necessário'}">
-          <button class="crono-reset-btn" id="crono-reset-${i}"
-            onclick="resetPrevisto(${i})"
-            title="Restaurar data calculada automaticamente"
+            id="crono-prev-input-${i}" value="${prevVal}"
+            title="${hasOverride?'Data editada manualmente':'Data calculada automaticamente'}">
+          <button class="crono-reset-btn" id="crono-reset-${i}" onclick="resetPrevisto(${i})"
+            title="Restaurar data calculada"
             style="${hasOverride?'opacity:1;pointer-events:all;color:var(--accent)':''}">🔄</button>
         </div>
       </td>
       <td>
         <input type="date" class="crono-date-input" id="crono-real-${i}"
-          value="${rc[chaveReal]||''}"
-          data-key="${chaveReal}"
-          title="Preencha a data realizada para calcular o desvio">
+          value="${rc[chaveReal]||''}" data-key="${chaveReal}">
       </td>
-      <td id="crono-delta-${i}"><span class="crono-delta empty">—</span></td>
+      <td id="crono-delta-${i}" style="display:flex;align-items:center;gap:6px">
+        <span class="crono-delta empty">—</span>
+        <button class="crono-na-btn" onclick="toggleNA(${i})" title="Marcar como Não Aplicável">N/A</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -2424,11 +2737,11 @@ function renderFluxo(p) {
         <div class="fdash-bar-segments">
           ${etapasStatus.map(e => `
             <div class="fdash-seg" title="${e.nome}: ${e.status}"
-              style="background:${e.realizado ? (e.delta===0?'var(--green)':e.delta>0?'var(--red)':'var(--accent)') : (e.status==='Atrasado'?'rgba(255,23,68,.35)':'var(--border2)')};
-                     opacity:${e.previsto?1:.35}"></div>`).join('')}
+              style="background:${e.isNA ? 'var(--border)' : e.realizado ? (e.delta===0?'var(--green)':e.delta>0?'var(--red)':'var(--accent)') : (e.status==='Atrasado'?'rgba(255,23,68,.35)':'var(--border2)')};
+                     opacity:${e.isNA ? 0.3 : e.previsto ? 1 : .35}"></div>`).join('')}
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:6px;font-family:'Barlow Condensed',sans-serif">
-          <span>${concluidas} de ${total} atividades concluídas</span>
+          <span>${concluidas} de ${total} atividades concluídas${naoAplicaveis>0?` · ${naoAplicaveis} N/A`:''}</span>
           <span>${atrasadas > 0 ? `⚠ ${atrasadas} atrasada${atrasadas>1?'s':''}` : '✓ Sem atrasos'}</span>
         </div>
       </div>
@@ -2506,7 +2819,7 @@ function renderFluxo(p) {
           <th>Fórmula</th>
           <th>Previsto</th>
           <th>Realizado</th>
-          <th>Δ Dias</th>
+          <th>Δ / Ação</th>
         </tr></thead>
         <tbody>${linhasHTML}</tbody>
       </table>
@@ -2533,10 +2846,12 @@ function atualizarDashboardFluxo(p) {
   const rc       = p.cronoRealizado || {};
   const crono    = p.crono || calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0);
   const overridesD = p.cronoOverride || {};
+  const cronoNAd = p.cronoNA || {};
   const hoje     = new Date().toISOString().split('T')[0];
 
   const etapasStatus = CRONO_LINHAS.map((linha, i) => {
     const [chaveCalc, chaveReal, icone, nome] = linha;
+    if (cronoNAd[chaveCalc]) return { i, icone, nome, status:'N/A', cor:'var(--text3)', bg:'rgba(255,255,255,.03)', previsto:'', realizado:'', delta:null, isNA:true };
     // Lê do DOM se disponível (reflete edições em andamento), senão do objeto
     const prevInputEl = document.getElementById(`crono-prev-input-${i}`);
     const previsto  = (prevInputEl ? prevInputEl.value : null) || overridesD[chaveCalc] || crono[chaveCalc] || '';
@@ -2554,15 +2869,15 @@ function atualizarDashboardFluxo(p) {
     } else {
       status = 'Sem Data'; cor = 'var(--text3)'; bg = 'rgba(255,255,255,.03)';
     }
-    return { i, icone, nome, previsto, realizado, delta, status, cor, bg };
+    return { i, icone, nome, previsto, realizado, delta, status, cor, bg, isNA: false };
   });
 
-  const total      = etapasStatus.length;
-  const concluidas = etapasStatus.filter(e => e.realizado).length;
+  const total      = etapasStatus.filter(e => !e.isNA).length;
+  const concluidas = etapasStatus.filter(e => e.realizado && !e.isNA).length;
   const atrasadas  = etapasStatus.filter(e => e.status === 'Atrasado').length;
   const antecipadas= etapasStatus.filter(e => e.status === 'Antecipado').length;
-  const pendentes  = etapasStatus.filter(e => e.status === 'Pendente' || e.status === 'Sem Data').length;
-  const pctGeral   = Math.round((concluidas / total) * 100);
+  const pendentes  = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
+  const pctGeral   = total > 0 ? Math.round((concluidas / total) * 100) : 0;
 
   // Atualiza KPIs
   const kpis = dashEl.querySelectorAll('.fdash-kpi-val');
@@ -2790,7 +3105,37 @@ function bindFluxoEventos(p) {
   recalcularAoVivo();
 }
 
-// ─── RESET DE OVERRIDE MANUAL ────────────────────────────────────────────────
+// ─── MARCAR ATIVIDADE COMO NÃO APLICÁVEL ─────────────────────────────────
+function toggleNA(i) {
+  const p = getProjeto();
+  if (!p) return;
+  const [chaveCalc] = CRONO_LINHAS[i];
+  if (!p.cronoNA) p.cronoNA = {};
+
+  const jaNA = !!p.cronoNA[chaveCalc];
+
+  if (jaNA) {
+    // Reativar
+    delete p.cronoNA[chaveCalc];
+    toast('↩ Atividade reativada!', 1500);
+  } else {
+    // Marcar como N/A
+    p.cronoNA[chaveCalc] = true;
+    // Remove dados de realizado e override desta atividade
+    const [, chaveReal] = CRONO_LINHAS[i];
+    if (p.cronoRealizado) delete p.cronoRealizado[chaveReal];
+    if (p.cronoOverride)  delete p.cronoOverride[chaveCalc];
+    toast('⊘ Atividade marcada como Não Aplicável', 1800);
+  }
+
+  saveAsync(projId);
+  // Re-renderiza a aba fluxo para refletir a mudança
+  if (currentTab === 'fluxo') {
+    document.getElementById('tab-content').innerHTML = renderFluxo(p);
+    bindFluxoEventos(p);
+  }
+  atualizarDashboardFluxo(p);
+}────
 // Chamado pelo botão 🔄 em cada linha — restaura o valor calculado automaticamente
 function resetPrevisto(i) {
   const p = getProjeto();
@@ -3398,6 +3743,9 @@ function entrarNoSistema(user) {
   // Botão admin só para admins
   if (user.role === 'admin') {
     document.getElementById('btn-admin-users').style.display = '';
+    document.getElementById('btn-feriados').style.display = '';
+  } else if (user.role === 'editor') {
+    document.getElementById('btn-feriados').style.display = '';
   }
 
   // Restrições de perfil: viewer só visualiza
@@ -3583,6 +3931,218 @@ async function tentarLogin() {
   atualizarIndicadorConexao(fonte);
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// MODAL DE ATIVIDADE — Observações, Responsável, Histórico
+// ═══════════════════════════════════════════════════════════════════
+
+let actModalIndex = null; // índice da linha CRONO_LINHAS aberta
+
+function openActModal(i) {
+  actModalIndex = i;
+  const p = getProjeto();
+  if (!p) return;
+
+  const [chaveCalc,, icone, nome, formula] = CRONO_LINHAS[i];
+
+  document.getElementById('act-modal-nome').textContent    = `${icone} ${nome}`;
+  document.getElementById('act-modal-formula').textContent = formula;
+
+  // Responsável
+  const respSelect = document.getElementById('act-resp-select');
+  const respId = (p.cronoResp && p.cronoResp[chaveCalc]) || '';
+  const users  = getUsers();
+  respSelect.innerHTML = '<option value="">— Sem responsável —</option>' +
+    users.map(u => `<option value="${u.id}" ${u.id===respId?'selected':''}>${u.nome} (${u.role})</option>`).join('');
+
+  // Observações
+  document.getElementById('act-obs-text').value = (p.cronoObs && p.cronoObs[chaveCalc]) || '';
+
+  // Histórico
+  renderHistorico(chaveCalc, p);
+
+  document.getElementById('act-modal-overlay').classList.add('open');
+  document.getElementById('act-obs-text').focus();
+}
+
+function renderHistorico(chaveCalc, p) {
+  const hist = (p.cronoHist && p.cronoHist[chaveCalc]) || [];
+  const el   = document.getElementById('act-hist-list');
+  const roleColors = { admin:'var(--purple)', editor:'var(--accent)', viewer:'var(--green)' };
+
+  if (!hist.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:16px">Nenhuma atualização registrada ainda.</div>';
+    return;
+  }
+
+  el.innerHTML = [...hist].reverse().map(h => {
+    const cor = roleColors[h.userRole] || 'var(--accent2)';
+    const ini = h.userName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+    return `<div class="hist-entry">
+      <div class="hist-header">
+        <div class="hist-avatar" style="background:${cor}">${ini}</div>
+        <div class="hist-user">${h.userName}</div>
+        <div class="hist-date">${new Date(h.ts).toLocaleString('pt-BR')}</div>
+      </div>
+      ${h.obs ? `<div class="hist-text">${h.obs.replace(/\n/g,'<br>')}</div>` : ''}
+      ${h.resp ? `<div class="hist-diff">👤 Responsável: ${h.respNome||h.resp}</div>` : ''}
+      ${h.campos ? `<div class="hist-diff">${h.campos}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function salvarAtividade() {
+  const p = getProjeto();
+  if (!p || actModalIndex === null) return;
+
+  const [chaveCalc] = CRONO_LINHAS[actModalIndex];
+  const novaObs   = document.getElementById('act-obs-text').value.trim();
+  const novoResp  = document.getElementById('act-resp-select').value;
+
+  const obsAnterior  = (p.cronoObs  && p.cronoObs[chaveCalc])  || '';
+  const respAnterior = (p.cronoResp && p.cronoResp[chaveCalc]) || '';
+
+  // Detecta o que mudou para o histórico
+  const mudancas = [];
+  if (novaObs !== obsAnterior) mudancas.push('obs');
+  if (novoResp !== respAnterior) mudancas.push('resp');
+
+  if (mudancas.length === 0) { closeActModal(); return; }
+
+  // Salva dados
+  if (!p.cronoObs)  p.cronoObs  = {};
+  if (!p.cronoResp) p.cronoResp = {};
+  if (!p.cronoHist) p.cronoHist = {};
+  if (!p.cronoHist[chaveCalc]) p.cronoHist[chaveCalc] = [];
+
+  p.cronoObs[chaveCalc]  = novaObs;
+  p.cronoResp[chaveCalc] = novoResp;
+
+  // Grava entrada no histórico
+  const users    = getUsers();
+  const respUser = novoResp ? users.find(u=>u.id===novoResp) : null;
+  const campos   = [];
+  if (mudancas.includes('resp')) {
+    const anterior = respAnterior ? (users.find(u=>u.id===respAnterior)||{}).nome||'—' : 'Nenhum';
+    campos.push(`Responsável: ${anterior} → ${respUser?.nome||'Nenhum'}`);
+  }
+
+  p.cronoHist[chaveCalc].push({
+    ts:       new Date().toISOString(),
+    userId:   currentUser?.id   || 'anon',
+    userName: currentUser?.nome || 'Usuário',
+    userRole: currentUser?.role || 'editor',
+    obs:      mudancas.includes('obs') ? novaObs : null,
+    resp:     novoResp || null,
+    respNome: respUser?.nome || null,
+    campos:   campos.join(' · ') || null,
+  });
+
+  await saveAsync(projId);
+
+  // Atualiza a linha na tabela sem rerender tudo
+  closeActModal();
+  if (currentTab === 'fluxo') {
+    document.getElementById('tab-content').innerHTML = renderFluxo(p);
+    bindFluxoEventos(p);
+  }
+  toast('✅ Atividade salva com histórico registrado!', 2000);
+}
+
+function closeActModal() {
+  document.getElementById('act-modal-overlay').classList.remove('open');
+  actModalIndex = null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// FERIADOS
+// ═══════════════════════════════════════════════════════════════════
+
+function openFeriados() {
+  renderFeriadosNacionais();
+  renderFeriadosCustom();
+  document.getElementById('modal-feriados').classList.add('open');
+}
+
+function renderFeriadosNacionais() {
+  const ano = new Date().getFullYear();
+  const nomes = {
+    '01-01':'Confraternização Universal', '04-21':'Tiradentes',
+    '05-01':'Dia do Trabalho', '09-07':'Independência do Brasil',
+    '10-12':'Nossa Senhora Aparecida', '11-02':'Finados',
+    '11-15':'Proclamação da República', '11-20':'Consciência Negra',
+    '12-25':'Natal',
+  };
+  // Páscoa e móveis
+  function pascoa(y) {
+    const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25);
+    const g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4;
+    const l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
+    const mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1;
+    return new Date(y,mes-1,dia);
+  }
+  const p=pascoa(ano), addD=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()+n);return r;};
+  const fmtd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const moveis=[
+    {data:fmtd(addD(p,-47)),nome:'Carnaval (2ª feira)'},
+    {data:fmtd(addD(p,-46)),nome:'Carnaval (Terça-feira)'},
+    {data:fmtd(addD(p,-2)), nome:'Sexta-feira Santa'},
+    {data:fmtd(p),          nome:'Páscoa'},
+    {data:fmtd(addD(p,60)), nome:'Corpus Christi'},
+  ];
+
+  const fixos = Object.entries(nomes).map(([mm,nome])=>({data:`${ano}-${mm}`,nome}));
+  const todos = [...fixos,...moveis].sort((a,b)=>a.data.localeCompare(b.data));
+
+  document.getElementById('holiday-national-list').innerHTML = todos.map(h=>`
+    <div class="holiday-row">
+      <div class="holiday-row-info">
+        <div class="holiday-row-name">${h.nome}</div>
+        <div class="holiday-row-date">${fmtDate(h.data)}</div>
+      </div>
+      <span class="holiday-national">Nacional</span>
+    </div>`).join('');
+}
+
+function renderFeriadosCustom() {
+  const list = getCustomHolidays();
+  const el   = document.getElementById('holiday-custom-list');
+  if (!list.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:10px">Nenhum feriado personalizado cadastrado.</div>';
+    return;
+  }
+  el.innerHTML = list.map((h,i)=>`
+    <div class="holiday-row">
+      <div class="holiday-row-info">
+        <div class="holiday-row-name">${h.nome}</div>
+        <div class="holiday-row-date">${fmtDate(h.data)}</div>
+      </div>
+      <button class="btn btn-danger" style="padding:4px 9px;font-size:11px" onclick="removerFeriado(${i})">🗑</button>
+    </div>`).join('');
+}
+
+function adicionarFeriado() {
+  const nome = document.getElementById('h-nome').value.trim();
+  const data = document.getElementById('h-data').value;
+  if (!nome || !data) { toast('⚠️ Preencha nome e data!'); return; }
+  const list = getCustomHolidays();
+  if (list.find(h=>h.data===data)) { toast('⚠️ Esta data já está cadastrada!'); return; }
+  list.push({ nome, data });
+  list.sort((a,b)=>a.data.localeCompare(b.data));
+  saveCustomHolidays(list);
+  document.getElementById('h-nome').value = '';
+  document.getElementById('h-data').value = '';
+  renderFeriadosCustom();
+  toast(`✅ Feriado "${nome}" adicionado! O cronograma será recalculado automaticamente.`);
+}
+
+function removerFeriado(i) {
+  const list = getCustomHolidays();
+  list.splice(i, 1);
+  saveCustomHolidays(list);
+  renderFeriadosCustom();
+  toast('🗑 Feriado removido.');
+}
+
 // ─── INIT ───
 // renderSidebar e openProjeto são chamados por iniciarSistema() após carregar dados
 
@@ -3592,6 +4152,12 @@ document.querySelectorAll('.overlay').forEach(o => {
 });
 document.getElementById('admin-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('admin-overlay')) closeAdminPanel();
+});
+document.getElementById('act-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('act-modal-overlay')) closeActModal();
+});
+document.getElementById('modal-feriados').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-feriados')) closeModal('modal-feriados');
 });
 
 // Inicia sistema — verifica sessão ou exibe login
