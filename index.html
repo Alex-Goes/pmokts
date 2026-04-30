@@ -1374,7 +1374,159 @@ body {
 // ═══════════════════════════════════════
 // DADOS & ESTADO
 // ═══════════════════════════════════════
-let db = JSON.parse(localStorage.getItem('gestorpro_db') || '{"projetos":[]}');
+// ═══════════════════════════════════════════════════════════════════
+// SUPABASE — BANCO DE DADOS NA NUVEM
+// Substitui localStorage para dados compartilhados em tempo real
+// ═══════════════════════════════════════════════════════════════════
+
+// ⚠️ CONFIGURAÇÃO: cole aqui os valores do seu projeto Supabase
+const SUPA_URL = 'https://ovacgrtgearfdudiuerd.supabase.co';
+const SUPA_KEY = 'sb_publishable_L1XDqYhhvRItg8ZLbp0BtA_PC6Z6VUW';
+
+// Detecta se Supabase está configurado
+const SUPA_OK = SUPA_URL !== 'COLE_SUA_URL_AQUI' && SUPA_KEY !== 'COLE_SUA_CHAVE_AQUI';
+
+// Headers padrão para todas as chamadas
+function supaHeaders(extra = {}) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Prefer': 'return=representation',
+    ...extra
+  };
+}
+
+// ── CRUD de projetos via Supabase REST API ───────────────────────────────
+
+async function supaCarregarProjetos() {
+  if (!SUPA_OK) return null;
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/projetos?select=*&order=created_at.asc`, {
+      headers: supaHeaders()
+    });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    // Cada linha tem: id, dados (JSON com o projeto completo)
+    return rows.map(row => ({ ...row.dados, _supaId: row.id }));
+  } catch { return null; }
+}
+
+async function supaSalvarProjeto(proj) {
+  if (!SUPA_OK) return false;
+  try {
+    const payload = { dados: proj, projeto_id: proj.id };
+    // Upsert: insere ou atualiza pelo projeto_id
+    const r = await fetch(`${SUPA_URL}/rest/v1/projetos`, {
+      method: 'POST',
+      headers: supaHeaders({ 'Prefer': 'resolution=merge-duplicates,return=representation' }),
+      body: JSON.stringify(payload)
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+async function supaExcluirProjeto(projetoId) {
+  if (!SUPA_OK) return false;
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/projetos?projeto_id=eq.${projetoId}`, {
+      method: 'DELETE',
+      headers: supaHeaders()
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+// Carregar usuários do Supabase
+async function supaCarregarUsuarios() {
+  if (!SUPA_OK) return null;
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/usuarios?select=*`, {
+      headers: supaHeaders()
+    });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; }
+}
+
+async function supaSalvarUsuario(user) {
+  if (!SUPA_OK) return false;
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/usuarios`, {
+      method: 'POST',
+      headers: supaHeaders({ 'Prefer': 'resolution=merge-duplicates,return=representation' }),
+      body: JSON.stringify(user)
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+async function supaExcluirUsuario(userId) {
+  if (!SUPA_OK) return false;
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/usuarios?id=eq.${userId}`, {
+      method: 'DELETE',
+      headers: supaHeaders()
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+// ── Camada de dados unificada (Supabase + localStorage fallback) ─────────
+
+// db em memória — sempre a fonte de verdade em runtime
+let db = { projetos: [] };
+
+// Carrega dados: tenta Supabase, cai para localStorage
+async function carregarDados() {
+  const supaProjs = await supaCarregarProjetos();
+  if (supaProjs !== null) {
+    db.projetos = supaProjs;
+    // Sincroniza localStorage como cache offline
+    localStorage.setItem('gestorpro_db', JSON.stringify(db));
+    return 'supabase';
+  }
+  // Fallback: localStorage
+  db = JSON.parse(localStorage.getItem('gestorpro_db') || '{"projetos":[]}');
+  return 'local';
+}
+
+// save() — salva localmente (chamado em operações síncronas para UI responsiva)
+function save() {
+  localStorage.setItem('gestorpro_db', JSON.stringify(db));
+}
+
+// saveAsync() — salva no Supabase + localStorage (chamado após mutações de projeto)
+async function saveAsync(projetoId) {
+  save(); // localStorage imediato
+  if (!SUPA_OK) return;
+  const proj = db.projetos.find(p => p.id === projetoId);
+  if (proj) await supaSalvarProjeto(proj);
+}
+
+// Carrega usuários: Supabase ou localStorage
+async function carregarUsuarios() {
+  const supaUsers = await supaCarregarUsuarios();
+  if (supaUsers !== null && supaUsers.length > 0) {
+    localStorage.setItem('pmokts_users', JSON.stringify(supaUsers));
+    return supaUsers;
+  }
+  return JSON.parse(localStorage.getItem('pmokts_users') || '[]');
+}
+
+// Wrapper para getUsers() — usa cache em memória
+let _usersCache = null;
+function getUsers() {
+  if (_usersCache) return _usersCache;
+  _usersCache = JSON.parse(localStorage.getItem('pmokts_users') || '[]');
+  return _usersCache;
+}
+function saveUsers(users) {
+  _usersCache = users;
+  localStorage.setItem('pmokts_users', JSON.stringify(users));
+  // Sync para Supabase em background
+  if (SUPA_OK) users.forEach(u => supaSalvarUsuario(u));
+}
 let projId = null;
 let currentTab = 'lista';
 let etapaEditId = null;
@@ -1401,8 +1553,6 @@ const STATUS_CLASS = {
 };
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2,5); }
-
-function save() { localStorage.setItem('gestorpro_db', JSON.stringify(db)); }
 
 function getProjeto() { return db.projetos.find(p => p.id === projId); }
 
@@ -1791,7 +1941,7 @@ function editarProjeto() {
   document.getElementById('modal-projeto').classList.add('open');
 }
 
-function salvarProjeto() {
+async function salvarProjeto() {
   const nome = document.getElementById('f-nome').value.trim();
   if (!nome) { toast('⚠️ Informe o nome do projeto!'); return; }
 
@@ -1800,8 +1950,6 @@ function salvarProjeto() {
   const aprovacao = document.getElementById('f-aprovacao').value;
   const tap = document.getElementById('f-tap').value;
   const dias = document.getElementById('f-dias').value;
-
-  // Calcular cronograma automático com base nas fórmulas da planilha
   const crono = calcularCronograma(aprovacao, tap, parseInt(dias)||0);
 
   if (editId) {
@@ -1819,11 +1967,12 @@ function salvarProjeto() {
       status: document.getElementById('f-status').value,
       crono,
     });
+    await saveAsync(editId);
   } else {
     const etapas = tpl && TEMPLATES[tpl]
       ? TEMPLATES[tpl].map(n => ({ id: uid(), nome: n, status: 'Pendente', pct: 0, resp: '', inicio: '', termino: '', obs: '' }))
       : [];
-    db.projetos.push({
+    const novoProjeto = {
       id: uid(), nome,
       proposta: document.getElementById('f-proposta').value,
       cliente: document.getElementById('f-cliente').value,
@@ -1836,22 +1985,25 @@ function salvarProjeto() {
       escopo: document.getElementById('f-escopo').value,
       status: document.getElementById('f-status').value,
       etapas, crono, criadoEm: new Date().toISOString()
-    });
-    projId = db.projetos[db.projetos.length-1].id;
+    };
+    db.projetos.push(novoProjeto);
+    projId = novoProjeto.id;
+    await saveAsync(novoProjeto.id);
   }
 
-  save();
   closeModal('modal-projeto');
   renderSidebar();
   openProjeto(projId);
-  toast('✅ Projeto salvo — cronograma calculado automaticamente!');
+  toast('✅ Projeto salvo — sincronizado na nuvem!');
 }
 
-function excluirProjeto() {
+async function excluirProjeto() {
   if (!confirm('Excluir este projeto? Esta ação não pode ser desfeita.')) return;
-  db.projetos = db.projetos.filter(p => p.id !== projId);
+  const idParaExcluir = projId;
+  db.projetos = db.projetos.filter(p => p.id !== idParaExcluir);
   projId = null;
   save();
+  if (SUPA_OK) await supaExcluirProjeto(idParaExcluir);
   document.getElementById('proj-view').style.display = 'none';
   document.getElementById('empty-state').style.display = 'flex';
   renderSidebar();
@@ -1890,7 +2042,7 @@ function editarEtapa(id) {
   document.getElementById('modal-etapa').classList.add('open');
 }
 
-function salvarEtapa() {
+async function salvarEtapa() {
   const nome = document.getElementById('e-nome').value.trim();
   if (!nome) { toast('⚠️ Informe o nome da etapa!'); return; }
   const p = getProjeto();
@@ -1911,34 +2063,33 @@ function salvarEtapa() {
     p.etapas.push({ id: uid(), ...dados });
   }
 
-  // auto status
   if (dados.pct === 100) p.etapas.find(x=>x.nome===nome).status = 'Concluído';
 
-  save();
+  await saveAsync(projId);
   closeModal('modal-etapa');
   openProjeto(projId);
   toast('✅ Etapa salva!');
 }
 
-function excluirEtapa() {
+async function excluirEtapa() {
   const id = document.getElementById('etapa-edit-id').value;
   if (!id) return;
   if (!confirm('Excluir esta etapa?')) return;
   const p = getProjeto();
   p.etapas = p.etapas.filter(e => e.id !== id);
-  save();
+  await saveAsync(projId);
   closeModal('modal-etapa');
   openProjeto(projId);
   toast('🗑 Etapa excluída.');
 }
 
-function updateEtapaField(id, field, value) {
+async function updateEtapaField(id, field, value) {
   const p = getProjeto();
   const e = p.etapas.find(x => x.id === id);
   if (!e) return;
   e[field] = field === 'pct' ? parseInt(value)||0 : value;
   if (field === 'pct' && e.pct === 100) e.status = 'Concluído';
-  save();
+  await saveAsync(projId);
   refreshProjeto();
 }
 
@@ -1976,9 +2127,9 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
  * Salva todas as alterações pendentes do projeto aberto e confirma ao usuário.
  * Usado pelo botão 💾 Salvar presente em todas as abas e no header.
  */
-function salvarAlteracoes() {
-  save(); // persiste o db inteiro no localStorage
-  // Feedback visual no botão que foi clicado
+async function salvarAlteracoes() {
+  save();
+  if (SUPA_OK && projId) await saveAsync(projId);
   const btns = document.querySelectorAll('.btn-success');
   btns.forEach(b => {
     if (b.textContent.includes('Salvar')) {
@@ -1988,7 +2139,7 @@ function salvarAlteracoes() {
       setTimeout(() => { b.textContent = orig; b.style.background = ''; }, 1800);
     }
   });
-  toast('💾 Alterações salvas com sucesso!', 2500);
+  toast(SUPA_OK ? '💾 Salvo na nuvem!' : '💾 Salvo localmente!', 2000);
 }
 
 function toast(msg, dur=3000) {
@@ -2690,7 +2841,7 @@ function saveCronoRealizado(key, value) {
   if (!p) return;
   if (!p.cronoRealizado) p.cronoRealizado = {};
   p.cronoRealizado[key] = value;
-  save();
+  saveAsync(projId);
 }
 
 function updateCronoInput(field, value) {
@@ -3227,34 +3378,7 @@ async function garantirAdminPadrao() {
 }
 
 // ── Login ────────────────────────────────────────────────────────────────
-async function tentarLogin() {
-  const userInput = document.getElementById('login-user').value.trim().toLowerCase();
-  const passInput = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-
-  if (!userInput || !passInput) {
-    errEl.textContent = 'Preencha usuário e senha.';
-    errEl.classList.add('show');
-    return;
-  }
-
-  const hash = await hashSenha(passInput);
-  const users = getUsers();
-  const user = users.find(u => u.usuario.toLowerCase() === userInput && u.senhaHash === hash);
-
-  if (!user) {
-    errEl.textContent = 'Usuário ou senha incorretos.';
-    errEl.classList.add('show');
-    document.getElementById('login-pass').value = '';
-    document.getElementById('login-pass').focus();
-    return;
-  }
-
-  errEl.classList.remove('show');
-  currentUser = user;
-  setSession(user);
-  entrarNoSistema(user);
-}
+// (nova versão com Supabase está em iniciarSistema abaixo)
 
 function entrarNoSistema(user) {
   // Oculta tela de login
@@ -3354,20 +3478,22 @@ async function adicionarUsuario() {
   }
 
   const hash = await hashSenha(pass);
-  users.push({ id: Date.now().toString(36), nome, usuario: user, senhaHash: hash, role, criadoEm: new Date().toISOString() });
+  const novoUser = { id: Date.now().toString(36), nome, usuario: user, senhaHash: hash, role, criadoEm: new Date().toISOString() };
+  users.push(novoUser);
   saveUsers(users);
 
   document.getElementById('nu-nome').value = '';
   document.getElementById('nu-user').value = '';
   document.getElementById('nu-pass').value = '';
   renderAdminUsers();
-  toast(`✅ Usuário @${user} criado com sucesso!`);
+  toast(`✅ Usuário @${user} criado${SUPA_OK?' e sincronizado na nuvem':''}!`);
 }
 
-function removerUsuario(id) {
+async function removerUsuario(id) {
   if (!confirm('Remover este usuário?')) return;
   const users = getUsers().filter(u => u.id !== id);
   saveUsers(users);
+  if (SUPA_OK) await supaExcluirUsuario(id);
   renderAdminUsers();
   toast('🗑 Usuário removido.');
 }
@@ -3376,25 +3502,89 @@ function removerUsuario(id) {
 async function iniciarSistema() {
   await garantirAdminPadrao();
 
+  // Verifica sessão
   const session = getSession();
+  let userValido = null;
+
   if (session) {
-    // Revalida que o usuário ainda existe
-    const users = getUsers();
-    const user = users.find(u => u.id === session.id && u.senhaHash === session.senhaHash);
-    if (user) {
-      currentUser = user;
-      entrarNoSistema(user);
-      return;
-    }
+    // Tenta revalidar com dados da nuvem se disponível
+    const users = await carregarUsuarios();
+    _usersCache = users;
+    localStorage.setItem('pmokts_users', JSON.stringify(users));
+    userValido = users.find(u => u.id === session.id && u.senhaHash === session.senhaHash);
   }
-  // Sem sessão válida — mantém tela de login visível
+
+  if (userValido) {
+    currentUser = userValido;
+
+    // Carrega projetos da nuvem
+    const fonte = await carregarDados();
+    renderSidebar();
+    if (db.projetos.length) openProjeto(db.projetos[0].id);
+
+    entrarNoSistema(userValido);
+
+    // Atualiza indicador de conexão no rodapé
+    atualizarIndicadorConexao(fonte);
+    return;
+  }
+
   document.getElementById('login-screen').style.display = 'flex';
 }
 
+function atualizarIndicadorConexao(fonte) {
+  const footer = document.querySelector('.sidebar-footer div');
+  if (!footer) return;
+  if (fonte === 'supabase') {
+    footer.innerHTML = '☁️ <span style="color:var(--green)">Dados na nuvem — sincronizados</span>';
+  } else {
+    footer.innerHTML = '💾 <span style="color:var(--yellow)">Dados locais — configure o Supabase</span>';
+  }
+}
+
+// Também carrega projetos do Supabase ao fazer login
+async function tentarLogin() {
+  const userInput = document.getElementById('login-user').value.trim().toLowerCase();
+  const passInput = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+
+  if (!userInput || !passInput) {
+    errEl.textContent = 'Preencha usuário e senha.';
+    errEl.classList.add('show');
+    return;
+  }
+
+  // Carrega usuários atualizados da nuvem antes de validar
+  const users = await carregarUsuarios();
+  _usersCache = users;
+  localStorage.setItem('pmokts_users', JSON.stringify(users));
+
+  const hash = await hashSenha(passInput);
+  const user = users.find(u => u.usuario.toLowerCase() === userInput && u.senhaHash === hash);
+
+  if (!user) {
+    errEl.textContent = 'Usuário ou senha incorretos.';
+    errEl.classList.add('show');
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+    return;
+  }
+
+  errEl.classList.remove('show');
+  currentUser = user;
+  setSession(user);
+
+  // Carrega projetos da nuvem
+  const fonte = await carregarDados();
+  renderSidebar();
+  if (db.projetos.length) openProjeto(db.projetos[0].id);
+
+  entrarNoSistema(user);
+  atualizarIndicadorConexao(fonte);
+}
+
 // ─── INIT ───
-// O app começa oculto — iniciarSistema() decide se mostra login ou app
-renderSidebar();
-if (db.projetos.length) openProjeto(db.projetos[0].id);
+// renderSidebar e openProjeto são chamados por iniciarSistema() após carregar dados
 
 // Fechar modais ao clicar fora
 document.querySelectorAll('.overlay').forEach(o => {
