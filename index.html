@@ -1112,6 +1112,84 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
 .holiday-row-date { font-size: 10px; color: var(--text2); margin-top: 1px; }
 .holiday-national { font-size: 9px; color: var(--text3); padding: 1px 6px; border-radius: 3px; background: var(--border); }
 
+/* ─── FILTRO POR RESPONSÁVEL ─── */
+.dg-filter-bar {
+  flex-shrink: 0; padding: 10px 24px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.dg-filter-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text3); margin-right: 4px; flex-shrink: 0;
+}
+.dg-filter-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: .5px;
+  border: 1px solid var(--border2); background: var(--card);
+  color: var(--text2); transition: all .15s; white-space: nowrap;
+}
+.dg-filter-chip:hover { border-color: var(--accent); color: var(--text); }
+.dg-filter-chip.active {
+  background: rgba(0,212,255,.12);
+  border-color: var(--accent); color: var(--accent);
+}
+.dg-filter-chip.sem-resp.active {
+  background: rgba(255,214,0,.12);
+  border-color: var(--yellow); color: var(--yellow);
+}
+.dg-filter-chip.all.active {
+  background: rgba(0,102,255,.15);
+  border-color: var(--accent2); color: var(--accent2);
+}
+.dg-filter-avatar {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.dg-filter-count {
+  background: rgba(255,255,255,.1); border-radius: 8px;
+  padding: 1px 6px; font-size: 10px;
+}
+
+/* ─── WIDGET RESPONSÁVEIS ─── */
+.dg-resp-header {
+  display: grid; grid-template-columns: 220px 1fr 80px 90px 90px 70px;
+  gap: 10px; font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text3); padding-bottom: 8px;
+  border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.dg-resp-row {
+  display: grid; grid-template-columns: 220px 1fr 80px 90px 90px 70px;
+  align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid rgba(37,45,64,.4); font-size: 12px;
+  transition: background .1s; cursor: pointer; border-radius: 4px;
+}
+.dg-resp-row:hover { background: rgba(255,255,255,.02); }
+.dg-resp-row:last-child { border-bottom: none; }
+.dg-resp-section {
+  margin-bottom: 18px;
+}
+.dg-resp-section-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 8px;
+  background: var(--card); border: 1px solid var(--border);
+  margin-bottom: 8px; cursor: pointer;
+}
+.dg-resp-section-head:hover { border-color: var(--border2); }
+.dg-resp-section-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.dg-resp-section-name { font-weight: 700; font-size: 13px; flex: 1; }
+.dg-resp-section-stats { display: flex; gap: 10px; font-size: 11px; }
+.dg-resp-stat { display: flex; align-items: center; gap: 4px; }
+
 /* ─── PRINT ─── */
 @media print {
   .topbar, .sidebar, .tabs, .proj-actions, .topbar-actions, .btn { display: none !important; }
@@ -1174,7 +1252,7 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
     </div>
     <button class="login-btn" onclick="tentarLogin()">🔐 Entrar</button>
     <div class="login-footer">
-      PMO KTS v2.0 · Dados salvos localmente
+      PMO KTS v3.0 · Dados salvos localmente
     </div>
   </div>
 </div>
@@ -1389,12 +1467,18 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
       </div>
       <div id="dg-widgets-bar" style="flex-shrink:0;padding:10px 24px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-right:4px">Painéis:</span>
-        <button class="dg-toggle-btn active" data-widget="kpis"        onclick="toggleWidget(this)">📊 KPIs</button>
-        <button class="dg-toggle-btn active" data-widget="saude"       onclick="toggleWidget(this)">🩺 Saúde</button>
-        <button class="dg-toggle-btn active" data-widget="fluxo-rank"  onclick="toggleWidget(this)">⚡ Fluxo</button>
-        <button class="dg-toggle-btn active" data-widget="alertas"     onclick="toggleWidget(this)">🚨 Alertas</button>
-        <button class="dg-toggle-btn active" data-widget="projetos-tab"onclick="toggleWidget(this)">📋 Projetos</button>
-        <button class="dg-toggle-btn active" data-widget="timeline-gl" onclick="toggleWidget(this)">📅 Timeline</button>
+        <button class="dg-toggle-btn active" data-widget="kpis"         onclick="toggleWidget(this)">📊 KPIs</button>
+        <button class="dg-toggle-btn active" data-widget="saude"        onclick="toggleWidget(this)">🩺 Saúde</button>
+        <button class="dg-toggle-btn active" data-widget="fluxo-rank"   onclick="toggleWidget(this)">⚡ Fluxo</button>
+        <button class="dg-toggle-btn active" data-widget="responsaveis" onclick="toggleWidget(this)">👤 Por Responsável</button>
+        <button class="dg-toggle-btn active" data-widget="alertas"      onclick="toggleWidget(this)">🚨 Alertas</button>
+        <button class="dg-toggle-btn active" data-widget="projetos-tab" onclick="toggleWidget(this)">📋 Projetos</button>
+        <button class="dg-toggle-btn active" data-widget="timeline-gl"  onclick="toggleWidget(this)">📅 Timeline</button>
+      </div>
+      <div id="dg-filter-bar" class="dg-filter-bar" style="display:none">
+        <span class="dg-filter-title">👤 Filtrar por:</span>
+        <div id="dg-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        <button class="btn btn-ghost" onclick="limparFiltroResp()" style="font-size:10px;padding:4px 10px;margin-left:4px">✕ Limpar filtro</button>
       </div>
       <div id="dg-content" style="flex:1;overflow-y:auto;padding:20px 24px 32px"></div>
     </div>
@@ -1592,6 +1676,7 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
 </div>
 
 <script>
+// PMO KTS v3.0 — build 1777577058
 // ═══════════════════════════════════════
 // DADOS & ESTADO
 // ═══════════════════════════════════════
@@ -2626,7 +2711,7 @@ function renderFluxo(p) {
     { key: 'Antecipado', label: 'Antecipado',            cor: 'var(--accent)', icon: '⚡' },
   ];
 
-  function cardDelta(e) {
+  const cardDelta = (e) => {
     if (!e.realizado && e.status === 'Atrasado' && e.previsto) {
       const d = diffDias(e.previsto, hoje);
       return `<div class="fdash-card-delta" style="color:var(--red)">▲ ${d}d em atraso</div>`;
@@ -3054,7 +3139,7 @@ function bindFluxoEventos(p) {
   if (!aprovEl || !tapEl || !diasEl) return;
 
   // Função central: lê os 3 inputs, recalcula, atualiza SOMENTE as células de resultado
-  function recalcularAoVivo() {
+  const recalcularAoVivo = () => {
     const apr  = aprovEl.value;
     const tap  = tapEl.value;
     const dias = parseInt(diasEl.value) || 0;
@@ -3388,10 +3473,24 @@ function dgFluxoPct(p) { return calcFluxoPct(p); }
 function dgExecPct(p) { return calcPct(p); }
 
 // ── Render principal ───────────────────────────────────────────────────────
+// Estado do filtro de responsável
+let dgFiltroResp = null; // null = todos, 'sem_resp' = sem responsável, userId = filtrado
+
+function filtrarPorResp(userId) {
+  dgFiltroResp = dgFiltroResp === userId ? null : userId;
+  renderDashboardGlobal();
+}
+
+function limparFiltroResp() {
+  dgFiltroResp = null;
+  renderDashboardGlobal();
+}
+
 function renderDashboardGlobal() {
   const projs = db.projetos;
   const hoje  = new Date().toISOString().split('T')[0];
   const el    = document.getElementById('dg-content');
+  const users = getUsers();
 
   if (!projs.length) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">📊</div>
@@ -3400,46 +3499,261 @@ function renderDashboardGlobal() {
     return;
   }
 
-  // ── Calcular métricas globais ──────────────────────────────────────────
-  const total        = projs.length;
-  const concluidos   = projs.filter(p => p.status === 'Concluído').length;
-  const suspensos    = projs.filter(p => p.status === 'Suspenso').length;
-  const comAtraso    = projs.filter(p => dgStatusProj(p).label.includes('atraso')).length;
-  const emAndamento  = projs.filter(p => !['Concluído','Suspenso'].includes(p.status)).length;
-  const mediaFluxo   = projs.length ? Math.round(projs.reduce((a,p) => a + dgFluxoPct(p),0)/projs.length) : 0;
+  // ── Montar mapa de responsáveis por atividade ─────────────────────────
+  // Para cada usuário, quais atividades (projeto + linha) estão atribuídas
+  const respMap = {}; // userId -> [{proj, chaveCalc, chaveReal, icone, nome, previsto, realizado, status, ...}]
+  const semResp = []; // atividades sem responsável
 
-  // Total de etapas de execução
-  const totalEtapas   = projs.reduce((a,p) => a + (p.etapas||[]).length, 0);
-  const etapasConcl   = projs.reduce((a,p) => a + (p.etapas||[]).filter(e=>e.status==='Concluído').length, 0);
-  const etapasAtras   = projs.reduce((a,p) => a + (p.etapas||[]).filter(e=>e.status==='Atrasado').length, 0);
-
-  // ── Alertas ────────────────────────────────────────────────────────────
-  const alertas = [];
   projs.forEach(p => {
-    const crono = p.crono || {};
-    const rc    = p.cronoRealizado || {};
-    const overrides = p.cronoOverride || {};
+    const crono     = p.crono || {};
+    const rc        = p.cronoRealizado || {};
+    const overrides = p.cronoOverride  || {};
+    const cronoResp = p.cronoResp      || {};
+    const cronoNA   = p.cronoNA        || {};
+    const cronoObs  = p.cronoObs       || {};
+
     CRONO_LINHAS.forEach(l => {
-      const prev = overrides[l[0]] || crono[l[0]] || '';
-      if (prev && prev < hoje && !rc[l[1]]) {
-        const diasAtr = Math.round((new Date(hoje) - new Date(prev+'T00:00:00'))/86400000);
-        alertas.push({ tipo:'danger', proj:p, atividade:l[3], diasAtraso:diasAtr, previsto:prev });
+      const [chaveCalc, chaveReal, icone, nome] = l;
+      if (cronoNA[chaveCalc]) return; // ignora N/A
+
+      const previsto  = overrides[chaveCalc] || crono[chaveCalc] || '';
+      const realizado = rc[chaveReal] || '';
+      const respId    = cronoResp[chaveCalc] || '';
+      const obs       = cronoObs[chaveCalc]  || '';
+      const delta     = diffDias(previsto, realizado);
+
+      let status, cor;
+      if (realizado) {
+        if (delta === 0)    { status = 'No Prazo';   cor = 'var(--green)'; }
+        else if (delta > 0) { status = 'Atrasado';   cor = 'var(--red)';   }
+        else                { status = 'Antecipado'; cor = 'var(--accent)';}
+      } else if (previsto && previsto < hoje) {
+        status = 'Atrasado'; cor = 'var(--red)';
+      } else if (previsto) {
+        status = 'Pendente'; cor = 'var(--yellow)';
+      } else {
+        status = 'Sem Data'; cor = 'var(--text3)';
+      }
+
+      const item = { proj: p, chaveCalc, chaveReal, icone, nome, previsto, realizado, delta, status, cor, respId, obs };
+
+      if (respId) {
+        if (!respMap[respId]) respMap[respId] = [];
+        respMap[respId].push(item);
+      } else {
+        semResp.push(item);
       }
     });
-    // Etapas de execução atrasadas
+  });
+
+  // Contagem por responsável para os chips de filtro
+  const respCounts = {};
+  Object.entries(respMap).forEach(([uid, items]) => { respCounts[uid] = items.length; });
+
+  // ── Renderizar barra de filtros ───────────────────────────────────────
+  const filterBar   = document.getElementById('dg-filter-bar');
+  const filterChips = document.getElementById('dg-filter-chips');
+  const temFiltros  = Object.keys(respMap).length > 0 || semResp.length > 0;
+  filterBar.style.display = temFiltros ? '' : 'none';
+
+  if (temFiltros) {
+    const chipsHTML = [
+      `<div class="dg-filter-chip all ${dgFiltroResp===null?'active':''}" onclick="filtrarPorResp('__todos__')" title="Mostrar todos">
+        🌐 Todos <span class="dg-filter-count">${projs.reduce((a,p)=>a+(CRONO_LINHAS.filter(l=>!(p.cronoNA||{})[l[0]]).length),0)}</span>
+      </div>`,
+      ...Object.keys(respMap).map(uid => {
+        const u   = users.find(x => x.id === uid);
+        const nome = u ? u.nome : uid;
+        const ini  = nome.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+        const cor  = { admin:'#7c4dff', editor:'#00d4ff', viewer:'#00e676' }[u?.role] || '#0066ff';
+        const ativo= dgFiltroResp === uid;
+        const atrasadas = respMap[uid].filter(i=>i.status==='Atrasado').length;
+        return `<div class="dg-filter-chip ${ativo?'active':''}" onclick="filtrarPorResp('${uid}')" title="Ver atividades de ${nome}">
+          <div class="dg-filter-avatar" style="background:${cor}">${ini}</div>
+          ${nome.split(' ')[0]}
+          <span class="dg-filter-count">${respMap[uid].length}</span>
+          ${atrasadas?`<span style="color:var(--red);font-size:10px;font-weight:700">▲${atrasadas}</span>`:''}
+        </div>`;
+      }),
+      semResp.length ? `<div class="dg-filter-chip sem-resp ${dgFiltroResp==='sem_resp'?'active':''}" onclick="filtrarPorResp('sem_resp')" title="Atividades sem responsável">
+        ⚠ Sem Responsável <span class="dg-filter-count">${semResp.length}</span>
+      </div>` : ''
+    ].join('');
+    filterChips.innerHTML = chipsHTML;
+  }
+
+  // ── Aplicar filtro nos dados ──────────────────────────────────────────
+  let projsFiltrados = projs;
+  if (dgFiltroResp && dgFiltroResp !== '__todos__') {
+    if (dgFiltroResp === 'sem_resp') {
+      // Mostra apenas projetos que têm atividades sem responsável
+      projsFiltrados = projs.filter(p => {
+        const cronoResp = p.cronoResp || {};
+        const cronoNA   = p.cronoNA   || {};
+        return CRONO_LINHAS.some(l => !cronoNA[l[0]] && !cronoResp[l[0]]);
+      });
+    } else {
+      // Mostra apenas projetos que têm atividades do usuário selecionado
+      projsFiltrados = projs.filter(p => {
+        const cronoResp = p.cronoResp || {};
+        return Object.values(cronoResp).includes(dgFiltroResp);
+      });
+    }
+  }
+
+  // ── Calcular métricas (sobre projsFiltrados) ──────────────────────────
+  const total        = projsFiltrados.length;
+  const concluidos   = projsFiltrados.filter(p => p.status === 'Concluído').length;
+  const suspensos    = projsFiltrados.filter(p => p.status === 'Suspenso').length;
+  const comAtraso    = projsFiltrados.filter(p => dgStatusProj(p).label.includes('atraso')).length;
+  const emAndamento  = projsFiltrados.filter(p => !['Concluído','Suspenso'].includes(p.status)).length;
+  const mediaFluxo   = projsFiltrados.length ? Math.round(projsFiltrados.reduce((a,p) => a + dgFluxoPct(p),0)/projsFiltrados.length) : 0;
+  const totalEtapas  = projsFiltrados.reduce((a,p) => a + (p.etapas||[]).length, 0);
+  const etapasConcl  = projsFiltrados.reduce((a,p) => a + (p.etapas||[]).filter(e=>e.status==='Concluído').length, 0);
+  const etapasAtras  = projsFiltrados.reduce((a,p) => a + (p.etapas||[]).filter(e=>e.status==='Atrasado').length, 0);
+
+  // ── Alertas ───────────────────────────────────────────────────────────
+  const alertas = [];
+  projsFiltrados.forEach(p => {
+    const crono     = p.crono || {};
+    const rc        = p.cronoRealizado || {};
+    const overrides = p.cronoOverride  || {};
+    const cronoResp = p.cronoResp      || {};
+    const cronoNA   = p.cronoNA        || {};
+    CRONO_LINHAS.forEach(l => {
+      if (cronoNA[l[0]]) return;
+      const prev   = overrides[l[0]] || crono[l[0]] || '';
+      const respId = cronoResp[l[0]] || '';
+      // aplica filtro de responsável dentro dos alertas também
+      if (dgFiltroResp && dgFiltroResp !== '__todos__') {
+        if (dgFiltroResp === 'sem_resp' && respId) return;
+        if (dgFiltroResp !== 'sem_resp' && respId !== dgFiltroResp) return;
+      }
+      if (prev && prev < hoje && !rc[l[1]]) {
+        const diasAtr = Math.round((new Date(hoje) - new Date(prev+'T00:00:00'))/86400000);
+        const u       = respId ? users.find(x=>x.id===respId) : null;
+        alertas.push({ tipo:'danger', proj:p, atividade:l[3], diasAtraso:diasAtr, previsto:prev, respNome: u?.nome||'' });
+      }
+    });
     (p.etapas||[]).filter(e=>e.status==='Atrasado').forEach(e => {
-      alertas.push({ tipo:'warn', proj:p, atividade:`Etapa: ${e.nome}`, diasAtraso:null, previsto:e.termino||'' });
+      alertas.push({ tipo:'warn', proj:p, atividade:`Etapa: ${e.nome}`, diasAtraso:null, previsto:e.termino||'', respNome:e.resp||'' });
     });
   });
   alertas.sort((a,b) => (b.diasAtraso||0)-(a.diasAtraso||0));
 
-  // ── HTML de cada widget ────────────────────────────────────────────────
+  // ── Helper para renderizar uma linha de atividade ─────────────────────
+  const linhaAtividade = (item) => {
+    const { proj, icone, nome, previsto, realizado, delta, status, cor, respId, obs } = item;
+    const u        = respId ? users.find(x=>x.id===respId) : null;
+    const respNome = u ? u.nome.split(' ')[0] : '';
+    const dTxt     = delta !== null && realizado
+      ? (delta===0 ? `<span style="color:var(--green)">✓</span>`
+        : delta>0  ? `<span style="color:var(--red)">+${delta}d</span>`
+        :            `<span style="color:var(--accent)">${delta}d</span>`)
+      : (status==='Atrasado' ? `<span style="color:var(--red)">▲</span>` : `<span style="color:var(--text3)">—</span>`);
+    const stBadge = `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${cor}22;color:${cor};font-family:'Barlow Condensed',sans-serif;white-space:nowrap">${status}</span>`;
 
-  // Widget 1 — KPIs
+    return `<div class="dg-resp-row" onclick="abrirProjetoDash('${proj.id}')">
+      <div>
+        <div style="font-weight:600;font-size:12px">${icone} ${nome}</div>
+        ${obs?`<div style="font-size:10px;color:var(--text3);margin-top:2px">💬 ${obs.substring(0,40)}${obs.length>40?'…':''}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--accent);font-weight:600;cursor:pointer">${proj.proposta||proj.nome}</div>
+      <div style="font-size:11px;white-space:nowrap;color:var(--text2)">${previsto?fmtDate(previsto):'—'}</div>
+      <div style="font-size:11px;white-space:nowrap;color:var(--text2)">${realizado?fmtDate(realizado):'<span style="color:var(--text3)">Pendente</span>'}</div>
+      <div>${stBadge}</div>
+      <div style="text-align:center">${dTxt}</div>
+    </div>`;
+  }
+
+  // ── Widget RESPONSÁVEIS ───────────────────────────────────────────────
+  const roleColors = { admin:'#7c4dff', editor:'#00d4ff', viewer:'#00e676' };
+
+  // Decide quais seções mostrar com base no filtro
+  const mostrarUsuarios = (!dgFiltroResp || dgFiltroResp === '__todos__')
+    ? Object.keys(respMap)
+    : dgFiltroResp === 'sem_resp' ? [] : [dgFiltroResp];
+
+  const mostrarSemResp = !dgFiltroResp || dgFiltroResp === '__todos__' || dgFiltroResp === 'sem_resp';
+
+  const secoesHTML = [
+    // Seções por usuário
+    ...mostrarUsuarios.filter(uid => respMap[uid]?.length).map(uid => {
+      const u       = users.find(x=>x.id===uid);
+      const nome    = u?.nome || uid;
+      const ini     = nome.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+      const cor     = roleColors[u?.role] || '#0066ff';
+      const items   = respMap[uid];
+      const atrasadas  = items.filter(i=>i.status==='Atrasado').length;
+      const concluidas = items.filter(i=>i.realizado).length;
+      const pendentes  = items.filter(i=>!i.realizado && i.status!=='Atrasado').length;
+
+      return `<div class="dg-resp-section">
+        <div class="dg-resp-section-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+          <div class="dg-resp-section-avatar" style="background:${cor}">${ini}</div>
+          <div class="dg-resp-section-name">${nome}</div>
+          <div class="dg-resp-section-stats">
+            <span class="dg-resp-stat" style="color:var(--text2)">📋 ${items.length} atividades</span>
+            ${concluidas?`<span class="dg-resp-stat" style="color:var(--green)">✓ ${concluidas} concluídas</span>`:''}
+            ${atrasadas?`<span class="dg-resp-stat" style="color:var(--red)">▲ ${atrasadas} atrasadas</span>`:''}
+            ${pendentes?`<span class="dg-resp-stat" style="color:var(--yellow)">⏳ ${pendentes} pendentes</span>`:''}
+          </div>
+          <span style="color:var(--text3);font-size:12px;margin-left:8px">▾</span>
+        </div>
+        <div style="padding-left:8px">
+          <div class="dg-resp-header">
+            <span>Atividade</span><span>Projeto</span><span>Previsto</span><span>Realizado</span><span>Status</span><span>Δ</span>
+          </div>
+          ${items.map(linhaAtividade).join('')}
+        </div>
+      </div>`;
+    }),
+
+    // Seção sem responsável
+    mostrarSemResp && semResp.length ? `
+    <div class="dg-resp-section">
+      <div class="dg-resp-section-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'"
+        style="border-color:rgba(255,214,0,.3);background:rgba(255,214,0,.04)">
+        <div class="dg-resp-section-avatar" style="background:var(--yellow);color:#000">?</div>
+        <div class="dg-resp-section-name" style="color:var(--yellow)">Sem Responsável Atribuído</div>
+        <div class="dg-resp-section-stats">
+          <span class="dg-resp-stat" style="color:var(--yellow)">⚠ ${semResp.length} atividades sem responsável</span>
+          ${semResp.filter(i=>i.status==='Atrasado').length?`<span class="dg-resp-stat" style="color:var(--red)">▲ ${semResp.filter(i=>i.status==='Atrasado').length} atrasadas</span>`:''}
+        </div>
+        <span style="color:var(--text3);font-size:12px;margin-left:8px">▾</span>
+      </div>
+      <div style="padding-left:8px">
+        <div class="dg-resp-header">
+          <span>Atividade</span><span>Projeto</span><span>Previsto</span><span>Realizado</span><span>Status</span><span>Δ</span>
+        </div>
+        ${semResp.map(linhaAtividade).join('')}
+      </div>
+    </div>` : ''
+  ].filter(Boolean).join('');
+
+  const wResponsaveis = `
+  <div class="dg-widget" id="dg-w-responsaveis">
+    <div class="dg-widget-head" onclick="toggleWidgetCollapse('responsaveis')">
+      <div class="dg-widget-title">👤 Atividades por Responsável
+        ${semResp.length?`<span style="background:rgba(255,214,0,.15);color:var(--yellow);font-size:10px;padding:2px 8px;border-radius:10px;font-family:'Barlow',sans-serif;font-weight:400;margin-left:6px">⚠ ${semResp.length} sem responsável</span>`:''}
+      </div>
+      <span class="dg-chevron">▾</span>
+    </div>
+    <div class="dg-widget-body">
+      ${secoesHTML || `<div style="text-align:center;padding:20px;font-size:13px;color:var(--text3)">Nenhuma atividade encontrada para o filtro selecionado.</div>`}
+    </div>
+  </div>`;
+
+  // ── Widget KPIs ───────────────────────────────────────────────────────
+  const filtroLabel = dgFiltroResp && dgFiltroResp !== '__todos__'
+    ? (dgFiltroResp === 'sem_resp' ? ' — Sem Responsável'
+      : ` — ${users.find(x=>x.id===dgFiltroResp)?.nome||''}`)
+    : '';
+
   const wKpis = `
   <div class="dg-widget" id="dg-w-kpis">
     <div class="dg-widget-head" onclick="toggleWidgetCollapse('kpis')">
-      <div class="dg-widget-title">📊 KPIs Globais</div>
+      <div class="dg-widget-title">📊 KPIs Globais${filtroLabel?`<span style="font-size:11px;color:var(--accent);font-weight:400;margin-left:8px">${filtroLabel}</span>`:''}</div>
       <span class="dg-chevron">▾</span>
     </div>
     <div class="dg-widget-body">
@@ -3461,30 +3775,32 @@ function renderDashboardGlobal() {
           </div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;margin-bottom:8px">Saúde Geral dos Projetos</div>
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;margin-bottom:8px">Saúde Geral</div>
           <div style="height:10px;background:var(--border);border-radius:5px;overflow:hidden;display:flex">
-            <div style="width:${total?Math.round(concluidos/total*100):0}%;background:var(--green);transition:width .5s"></div>
-            <div style="width:${total?Math.round(emAndamento/total*100):0}%;background:var(--accent);transition:width .5s"></div>
-            <div style="width:${total?Math.round(comAtraso/total*100):0}%;background:var(--red);transition:width .5s"></div>
+            <div style="width:${total?Math.round(concluidos/total*100):0}%;background:var(--green)"></div>
+            <div style="width:${total?Math.round(emAndamento/total*100):0}%;background:var(--accent)"></div>
+            <div style="width:${total?Math.round(comAtraso/total*100):0}%;background:var(--red)"></div>
           </div>
           <div style="display:flex;gap:12px;margin-top:6px;font-size:10px;color:var(--text2)">
-            <span><span style="color:var(--green)">●</span> Conc. ${total?Math.round(concluidos/total*100):0}%</span>
-            <span><span style="color:var(--accent)">●</span> And. ${total?Math.round(emAndamento/total*100):0}%</span>
-            <span><span style="color:var(--red)">●</span> Atr. ${total?Math.round(comAtraso/total*100):0}%</span>
+            <span><span style="color:var(--green)">●</span> ${total?Math.round(concluidos/total*100):0}%</span>
+            <span><span style="color:var(--accent)">●</span> ${total?Math.round(emAndamento/total*100):0}%</span>
+            <span><span style="color:var(--red)">●</span> ${total?Math.round(comAtraso/total*100):0}%</span>
           </div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
-          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;margin-bottom:6px">Alertas Ativos</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:${alertas.filter(a=>a.tipo==='danger').length>0?'var(--red)':'var(--green)'}">
-            ${alertas.filter(a=>a.tipo==='danger').length}
+          <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;margin-bottom:6px">Atividades s/ Responsável</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:${semResp.length>0?'var(--yellow)':'var(--green)'}">
+            ${semResp.length}
           </div>
-          <div style="font-size:10px;color:var(--text3)">${alertas.filter(a=>a.tipo==='warn').length} avisos de execução</div>
+          <div style="font-size:10px;color:var(--text3);cursor:pointer" onclick="filtrarPorResp('sem_resp')">${semResp.length>0?'⚠ Clique para ver':'✓ Todas atribuídas'}</div>
         </div>
       </div>
     </div>
   </div>`;
 
-  // Widget 2 — Saúde dos projetos (cards)
+  // ── Widgets Saúde, Fluxo, Alertas, Tabela, Timeline ──────────────────
+  const projsOrd = [...projsFiltrados].sort((a,b) => dgFluxoPct(b) - dgFluxoPct(a));
+
   const wSaude = `
   <div class="dg-widget" id="dg-w-saude">
     <div class="dg-widget-head" onclick="toggleWidgetCollapse('saude')">
@@ -3493,33 +3809,27 @@ function renderDashboardGlobal() {
     </div>
     <div class="dg-widget-body">
       <div class="dg-proj-grid">
-        ${projs.map(p => {
-          const st   = dgStatusProj(p);
-          const fpct = dgFluxoPct(p);
-          const epct = dgExecPct(p);
-          const fColor = fpct===100?'var(--green)':fpct>60?'var(--accent)':fpct>30?'var(--yellow)':'var(--accent2)';
-          const eColor = epct===100?'var(--green)':epct>60?'var(--accent)':epct>30?'var(--yellow)':'var(--accent2)';
+        ${projsFiltrados.map(p => {
+          const st=dgStatusProj(p), fpct=dgFluxoPct(p), epct=dgExecPct(p);
+          const fc=fpct===100?'var(--green)':fpct>60?'var(--accent)':fpct>30?'var(--yellow)':'var(--accent2)';
+          const ec=epct===100?'var(--green)':epct>60?'var(--accent)':epct>30?'var(--yellow)':'var(--accent2)';
           return `<div class="dg-proj-card" style="border-left-color:${st.cor}" onclick="abrirProjetoDash('${p.id}')">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
-              <div>
-                <div class="dg-proj-card-title">${p.proposta||p.nome}</div>
-                <div class="dg-proj-card-sub">${p.nome}</div>
-              </div>
+              <div><div class="dg-proj-card-title">${p.proposta||p.nome}</div><div class="dg-proj-card-sub">${p.nome}</div></div>
               <span class="dg-status-chip" style="background:${st.bg};color:${st.cor}">${st.label}</span>
             </div>
             <div class="dg-proj-card-meta">
               ${p.cliente?`<span>🏢 ${p.cliente}</span>`:''}
               ${p.inicio?`<span>📅 ${fmt(p.inicio)}</span>`:''}
               ${p.termino?`<span>🏁 ${fmt(p.termino)}</span>`:''}
-              ${p.dias?`<span>⏱ ${p.dias}d</span>`:''}
             </div>
             <div class="dg-proj-bar-wrap">
-              <div class="dg-proj-bar-label"><span>⚡ Fluxo</span><span style="color:${fColor};font-weight:700">${fpct}%</span></div>
-              <div class="dg-proj-bar"><div class="dg-proj-bar-fill" style="width:${fpct}%;background:${fColor}"></div></div>
+              <div class="dg-proj-bar-label"><span>⚡ Fluxo</span><span style="color:${fc};font-weight:700">${fpct}%</span></div>
+              <div class="dg-proj-bar"><div class="dg-proj-bar-fill" style="width:${fpct}%;background:${fc}"></div></div>
             </div>
             <div class="dg-proj-bar-wrap" style="margin-top:6px">
-              <div class="dg-proj-bar-label"><span>🔧 Execução</span><span style="color:${eColor};font-weight:700">${epct}%</span></div>
-              <div class="dg-proj-bar"><div class="dg-proj-bar-fill" style="width:${epct}%;background:${eColor}"></div></div>
+              <div class="dg-proj-bar-label"><span>🔧 Execução</span><span style="color:${ec};font-weight:700">${epct}%</span></div>
+              <div class="dg-proj-bar"><div class="dg-proj-bar-fill" style="width:${epct}%;background:${ec}"></div></div>
             </div>
           </div>`;
         }).join('')}
@@ -3527,8 +3837,6 @@ function renderDashboardGlobal() {
     </div>
   </div>`;
 
-  // Widget 3 — Ranking Fluxo
-  const projsOrd = [...projs].sort((a,b) => dgFluxoPct(b) - dgFluxoPct(a));
   const wFluxo = `
   <div class="dg-widget" id="dg-w-fluxo-rank">
     <div class="dg-widget-head" onclick="toggleWidgetCollapse('fluxo-rank')">
@@ -3536,27 +3844,14 @@ function renderDashboardGlobal() {
       <span class="dg-chevron">▾</span>
     </div>
     <div class="dg-widget-body">
-      <div class="dg-fluxo-header">
-        <span>Projeto</span><span>Progresso do Fluxo</span><span>Fluxo</span><span>Execução</span><span>Status</span>
-      </div>
-      ${projsOrd.map((p,i) => {
-        const fpct = dgFluxoPct(p);
-        const epct = dgExecPct(p);
-        const st   = dgStatusProj(p);
-        const fColor = fpct===100?'var(--green)':fpct>60?'var(--accent)':fpct>30?'var(--yellow)':'var(--accent2)';
+      <div class="dg-fluxo-header"><span>Projeto</span><span>Progresso</span><span>Fluxo</span><span>Execução</span><span>Status</span></div>
+      ${projsOrd.map(p => {
+        const fpct=dgFluxoPct(p), epct=dgExecPct(p), st=dgStatusProj(p);
+        const fc=fpct===100?'var(--green)':fpct>60?'var(--accent)':fpct>30?'var(--yellow)':'var(--accent2)';
         return `<div class="dg-fluxo-row" onclick="abrirProjetoDash('${p.id}')" style="cursor:pointer">
-          <div>
-            <div style="font-weight:700;font-size:12px">${p.proposta||p.nome}</div>
-            <div style="font-size:10px;color:var(--text2)">${p.nome||''}</div>
-          </div>
-          <div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div class="dg-bar-inline" style="flex:1">
-                <div class="dg-bar-inline-fill" style="width:${fpct}%;background:${fColor}"></div>
-              </div>
-            </div>
-          </div>
-          <div style="font-weight:700;font-family:'Barlow Condensed',sans-serif;color:${fColor}">${fpct}%</div>
+          <div><div style="font-weight:700;font-size:12px">${p.proposta||p.nome}</div><div style="font-size:10px;color:var(--text2)">${p.nome}</div></div>
+          <div><div class="dg-bar-inline"><div class="dg-bar-inline-fill" style="width:${fpct}%;background:${fc}"></div></div></div>
+          <div style="font-weight:700;font-family:'Barlow Condensed',sans-serif;color:${fc}">${fpct}%</div>
           <div style="font-weight:700;font-family:'Barlow Condensed',sans-serif;color:var(--text2)">${epct}%</div>
           <div><span class="dg-status-chip" style="background:${st.bg};color:${st.cor}">${st.label}</span></div>
         </div>`;
@@ -3564,37 +3859,34 @@ function renderDashboardGlobal() {
     </div>
   </div>`;
 
-  // Widget 4 — Alertas
   const wAlertas = `
   <div class="dg-widget" id="dg-w-alertas">
     <div class="dg-widget-head" onclick="toggleWidgetCollapse('alertas')">
       <div class="dg-widget-title" style="color:${alertas.filter(a=>a.tipo==='danger').length>0?'var(--red)':'var(--accent)'}">
-        🚨 Alertas & Avisos ${alertas.length>0?`<span style="background:var(--red);color:#fff;font-size:10px;padding:1px 7px;border-radius:10px;margin-left:4px">${alertas.filter(a=>a.tipo==='danger').length}</span>`:''}
+        🚨 Alertas & Avisos${alertas.filter(a=>a.tipo==='danger').length>0?`<span style="background:var(--red);color:#fff;font-size:10px;padding:1px 7px;border-radius:10px;margin-left:4px">${alertas.filter(a=>a.tipo==='danger').length}</span>`:''}
       </div>
       <span class="dg-chevron">▾</span>
     </div>
     <div class="dg-widget-body">
       ${alertas.length===0
-        ? `<div style="text-align:center;padding:20px;color:var(--green);font-size:13px">✅ Nenhum alerta ativo — todos os projetos estão no prazo!</div>`
-        : alertas.map(a => `
+        ? `<div style="text-align:center;padding:20px;color:var(--green);font-size:13px">✅ Nenhum alerta ativo!</div>`
+        : alertas.map(a=>`
           <div class="dg-alerta ${a.tipo}">
-            <div class="dg-alerta-icon">${a.tipo==='danger'?'🔴':a.tipo==='warn'?'⚠️':'ℹ️'}</div>
+            <div class="dg-alerta-icon">${a.tipo==='danger'?'🔴':'⚠️'}</div>
             <div class="dg-alerta-body">
               <div class="dg-alerta-title">${a.atividade}</div>
               <div class="dg-alerta-sub">
-                ${a.diasAtraso!=null?`<strong style="color:var(--red)">${a.diasAtraso} dia${a.diasAtraso!==1?'s':''} de atraso</strong> ·`:''} 
+                ${a.diasAtraso!=null?`<strong style="color:var(--red)">${a.diasAtraso}d de atraso</strong> · `:''}
                 Previsto: ${a.previsto?fmt(a.previsto):'—'}
+                ${a.respNome?` · 👤 ${a.respNome}`:''}
               </div>
-              <div class="dg-alerta-proj" onclick="abrirProjetoDash('${a.proj.id}')">
-                📁 ${a.proj.proposta||a.proj.nome} — ${a.proj.nome}
-              </div>
+              <div class="dg-alerta-proj" onclick="abrirProjetoDash('${a.proj.id}')">📁 ${a.proj.proposta||a.proj.nome} — ${a.proj.nome}</div>
             </div>
           </div>`).join('')
       }
     </div>
   </div>`;
 
-  // Widget 5 — Tabela de todos os projetos
   const wTabela = `
   <div class="dg-widget" id="dg-w-projetos-tab">
     <div class="dg-widget-head" onclick="toggleWidgetCollapse('projetos-tab')">
@@ -3603,18 +3895,12 @@ function renderDashboardGlobal() {
     </div>
     <div class="dg-widget-body" style="padding:0">
       <table class="dg-table">
-        <thead><tr>
-          <th>Proposta</th><th>Nome do Projeto</th><th>Cliente</th>
-          <th>Início</th><th>Término</th><th>Dias</th>
-          <th>Fluxo</th><th>Execução</th><th>Status</th>
-        </tr></thead>
+        <thead><tr><th>Proposta</th><th>Nome</th><th>Cliente</th><th>Início</th><th>Término</th><th>Dias</th><th>Fluxo</th><th>Execução</th><th>Status</th></tr></thead>
         <tbody>
-          ${projs.map(p => {
-            const fpct = dgFluxoPct(p);
-            const epct = dgExecPct(p);
-            const st   = dgStatusProj(p);
-            const fc   = fpct===100?'var(--green)':fpct>60?'var(--accent)':fpct>30?'var(--yellow)':'var(--accent2)';
-            const ec   = epct===100?'var(--green)':epct>60?'var(--accent)':epct>30?'var(--yellow)':'var(--accent2)';
+          ${projsFiltrados.map(p=>{
+            const fpct=dgFluxoPct(p), epct=dgExecPct(p), st=dgStatusProj(p);
+            const fc=fpct===100?'var(--green)':fpct>60?'var(--accent)':fpct>30?'var(--yellow)':'var(--accent2)';
+            const ec=epct===100?'var(--green)':epct>60?'var(--accent)':epct>30?'var(--yellow)':'var(--accent2)';
             return `<tr onclick="abrirProjetoDash('${p.id}')">
               <td style="font-weight:700;color:var(--accent)">${p.proposta||'—'}</td>
               <td style="font-weight:600">${p.nome}</td>
@@ -3622,18 +3908,8 @@ function renderDashboardGlobal() {
               <td style="color:var(--text2);white-space:nowrap">${fmt(p.inicio)}</td>
               <td style="color:var(--text2);white-space:nowrap">${fmt(p.termino)}</td>
               <td style="color:var(--text2)">${p.dias||'—'}</td>
-              <td>
-                <div style="display:flex;align-items:center;gap:7px">
-                  <div class="dg-bar-inline"><div class="dg-bar-inline-fill" style="width:${fpct}%;background:${fc}"></div></div>
-                  <span style="font-size:11px;font-weight:700;color:${fc};width:32px">${fpct}%</span>
-                </div>
-              </td>
-              <td>
-                <div style="display:flex;align-items:center;gap:7px">
-                  <div class="dg-bar-inline"><div class="dg-bar-inline-fill" style="width:${epct}%;background:${ec}"></div></div>
-                  <span style="font-size:11px;font-weight:700;color:${ec};width:32px">${epct}%</span>
-                </div>
-              </td>
+              <td><div style="display:flex;align-items:center;gap:7px"><div class="dg-bar-inline"><div class="dg-bar-inline-fill" style="width:${fpct}%;background:${fc}"></div></div><span style="font-size:11px;font-weight:700;color:${fc};width:32px">${fpct}%</span></div></td>
+              <td><div style="display:flex;align-items:center;gap:7px"><div class="dg-bar-inline"><div class="dg-bar-inline-fill" style="width:${epct}%;background:${ec}"></div></div><span style="font-size:11px;font-weight:700;color:${ec};width:32px">${epct}%</span></div></td>
               <td><span class="dg-status-chip" style="background:${st.bg};color:${st.cor}">${st.label}</span></td>
             </tr>`;
           }).join('')}
@@ -3642,53 +3918,55 @@ function renderDashboardGlobal() {
     </div>
   </div>`;
 
-  // Widget 6 — Timeline global (próximas atividades de todos os projetos)
+  // Timeline filtrada por responsável
   const proximasAtiv = [];
-  projs.forEach(p => {
-    const crono = p.crono || {};
-    const rc    = p.cronoRealizado || {};
-    const overrides = p.cronoOverride || {};
+  projsFiltrados.forEach(p => {
+    const crono=p.crono||{}, rc=p.cronoRealizado||{}, overrides=p.cronoOverride||{};
+    const cronoResp=p.cronoResp||{}, cronoNA=p.cronoNA||{};
     CRONO_LINHAS.forEach(l => {
-      const prev = overrides[l[0]] || crono[l[0]] || '';
+      if (cronoNA[l[0]]) return;
+      const prev=overrides[l[0]]||crono[l[0]]||'';
+      const respId=cronoResp[l[0]]||'';
+      if (dgFiltroResp && dgFiltroResp!=='__todos__') {
+        if (dgFiltroResp==='sem_resp' && respId) return;
+        if (dgFiltroResp!=='sem_resp' && respId!==dgFiltroResp) return;
+      }
       if (prev && !rc[l[1]]) {
-        proximasAtiv.push({ proj:p, atividade:l[3], icone:l[2], previsto:prev, chaveCalc:l[0] });
+        const u = respId ? users.find(x=>x.id===respId) : null;
+        proximasAtiv.push({proj:p, atividade:l[3], icone:l[2], previsto:prev, respNome:u?.nome||''});
       }
     });
   });
-  proximasAtiv.sort((a,b) => a.previsto.localeCompare(b.previsto));
+  proximasAtiv.sort((a,b)=>a.previsto.localeCompare(b.previsto));
 
   const wTimeline = `
   <div class="dg-widget" id="dg-w-timeline-gl">
     <div class="dg-widget-head" onclick="toggleWidgetCollapse('timeline-gl')">
-      <div class="dg-widget-title">📅 Próximas Atividades — Todos os Projetos</div>
+      <div class="dg-widget-title">📅 Próximas Atividades</div>
       <span class="dg-chevron">▾</span>
     </div>
     <div class="dg-widget-body" style="padding:0">
       <div class="dg-tl-wrap">
         <table class="dg-tl-table">
-          <thead><tr>
-            <th>Data Prevista</th><th>Atividade</th><th>Projeto</th>
-            <th>Cliente</th><th>Situação</th>
-          </tr></thead>
+          <thead><tr><th>Data Prevista</th><th>Atividade</th><th>Projeto</th><th>Cliente</th><th>Responsável</th><th>Situação</th></tr></thead>
           <tbody>
             ${proximasAtiv.length===0
-              ? `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Todas as atividades foram realizadas ou sem datas previstas</td></tr>`
-              : proximasAtiv.map(a => {
-                  const atrasado = a.previsto < hoje;
-                  const diasDiff = Math.round((new Date(a.previsto+'T00:00:00') - new Date(hoje+'T00:00:00'))/86400000);
-                  const cor = atrasado ? 'var(--red)' : diasDiff <= 3 ? 'var(--yellow)' : 'var(--accent)';
-                  const sit = atrasado
-                    ? `<span class="dg-status-chip" style="background:rgba(255,23,68,.12);color:var(--red)">▲ ${Math.abs(diasDiff)}d atraso</span>`
-                    : diasDiff === 0
-                      ? `<span class="dg-status-chip" style="background:rgba(255,214,0,.12);color:var(--yellow)">Hoje!</span>`
-                      : diasDiff <= 3
-                        ? `<span class="dg-status-chip" style="background:rgba(255,214,0,.1);color:var(--yellow)">Em ${diasDiff}d</span>`
-                        : `<span class="dg-status-chip" style="background:rgba(0,212,255,.1);color:var(--accent)">Em ${diasDiff}d</span>`;
+              ? `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text3)">Nenhuma atividade pendente</td></tr>`
+              : proximasAtiv.map(a=>{
+                  const atrasado=a.previsto<hoje;
+                  const diasDiff=Math.round((new Date(a.previsto+'T00:00:00')-new Date(hoje+'T00:00:00'))/86400000);
+                  const cor=atrasado?'var(--red)':diasDiff<=3?'var(--yellow)':'var(--accent)';
+                  const sit=atrasado
+                    ?`<span class="dg-status-chip" style="background:rgba(255,23,68,.12);color:var(--red)">▲ ${Math.abs(diasDiff)}d atraso</span>`
+                    :diasDiff===0?`<span class="dg-status-chip" style="background:rgba(255,214,0,.12);color:var(--yellow)">Hoje!</span>`
+                    :diasDiff<=3?`<span class="dg-status-chip" style="background:rgba(255,214,0,.1);color:var(--yellow)">Em ${diasDiff}d</span>`
+                    :`<span class="dg-status-chip" style="background:rgba(0,212,255,.1);color:var(--accent)">Em ${diasDiff}d</span>`;
                   return `<tr onclick="abrirProjetoDash('${a.proj.id}')" style="cursor:pointer">
-                    <td style="font-weight:700;color:${cor};white-space:nowrap">${fmt(a.previsto)}</td>
+                    <td style="font-weight:700;color:${cor};white-space:nowrap">${fmtDate(a.previsto)}</td>
                     <td>${a.icone} ${a.atividade}</td>
-                    <td style="color:var(--accent);font-weight:600;cursor:pointer">${a.proj.proposta||a.proj.nome}</td>
+                    <td style="color:var(--accent);font-weight:600">${a.proj.proposta||a.proj.nome}</td>
                     <td style="color:var(--text2)">${a.proj.cliente||'—'}</td>
+                    <td style="color:var(--text2)">${a.respNome||'<span style="color:var(--yellow)">⚠ Sem responsável</span>'}</td>
                     <td>${sit}</td>
                   </tr>`;
                 }).join('')
@@ -3699,16 +3977,14 @@ function renderDashboardGlobal() {
     </div>
   </div>`;
 
-  el.innerHTML = wKpis + wSaude + wFluxo + wAlertas + wTabela + wTimeline;
+  el.innerHTML = wKpis + wSaude + wFluxo + wResponsaveis + wAlertas + wTabela + wTimeline;
 
-  // Garante que todos os widgets visíveis conforme os botões da barra
+  // Respeita visibilidade dos painéis
   document.querySelectorAll('.dg-toggle-btn').forEach(btn => {
-    const key = btn.dataset.widget;
-    const w   = document.getElementById('dg-w-' + key);
+    const key=btn.dataset.widget, w=document.getElementById('dg-w-'+key);
     if (w) w.style.display = btn.classList.contains('active') ? '' : 'none';
   });
 }
-
 // Abre um projeto pelo dashboard global
 function abrirProjetoDash(id) {
   dashGlobalOpen = false;
@@ -4139,22 +4415,15 @@ function renderFeriadosNacionais() {
     '11-15':'Proclamação da República', '11-20':'Consciência Negra',
     '12-25':'Natal',
   };
-  // Páscoa e móveis
-  function pascoa(y) {
-    const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25);
-    const g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4;
-    const l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451);
-    const mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1;
-    return new Date(y,mes-1,dia);
-  }
-  const p=pascoa(ano), addD=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()+n);return r;};
+  // Usa a função pascoa() já definida em getHolidays
+  const p2=pascoa(ano), addD=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()+n);return r;};
   const fmtd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const moveis=[
-    {data:fmtd(addD(p,-47)),nome:'Carnaval (2ª feira)'},
-    {data:fmtd(addD(p,-46)),nome:'Carnaval (Terça-feira)'},
-    {data:fmtd(addD(p,-2)), nome:'Sexta-feira Santa'},
-    {data:fmtd(p),          nome:'Páscoa'},
-    {data:fmtd(addD(p,60)), nome:'Corpus Christi'},
+    {data:fmtd(addD(p2,-47)),nome:'Carnaval (2ª feira)'},
+    {data:fmtd(addD(p2,-46)),nome:'Carnaval (Terça-feira)'},
+    {data:fmtd(addD(p2,-2)), nome:'Sexta-feira Santa'},
+    {data:fmtd(p2),          nome:'Páscoa'},
+    {data:fmtd(addD(p2,60)), nome:'Corpus Christi'},
   ];
 
   const fixos = Object.entries(nomes).map(([mm,nome])=>({data:`${ano}-${mm}`,nome}));
