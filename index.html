@@ -1677,26 +1677,25 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
       <label>Local / Endereço da Obra</label>
       <input type="text" id="f-local" placeholder="Ex: Osasco — SP, Rua das Flores, 100">
     </div>
-    <div class="form-row">
-      <div class="form-field">
+    <!-- Datas: 4 campos em grid 2x2 alinhados + botão calcular abaixo -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px">
+      <div class="form-field" style="margin-bottom:0">
         <label>Data de Aprovação ⭐</label>
         <input type="date" id="f-aprovacao" onchange="calcularDatasModal()">
       </div>
-      <div class="form-field">
+      <div class="form-field" style="margin-bottom:0">
         <label>Data do TAP ⭐</label>
         <input type="date" id="f-tap" title="TAP = Termo de Abertura do Projeto">
       </div>
-    </div>
-    <div class="form-row">
-      <div class="form-field">
+      <div class="form-field" style="margin-bottom:0">
         <label>
           Data de Início
           <span class="date-edited-badge" id="f-inicio-badge" style="display:none">✏ editado</span>
           <span style="color:var(--text3);font-size:9px;margin-left:4px">(Aprovação +20 dias corridos)</span>
         </label>
-        <input type="date" id="f-inicio" oninput="onInicioManualChange()" title="Editável — ao alterar, o Término será recalculado automaticamente">
+        <input type="date" id="f-inicio" oninput="onInicioManualChange()" title="Editável — ao alterar, o Término é recalculado">
       </div>
-      <div class="form-field">
+      <div class="form-field" style="margin-bottom:0">
         <label>
           Data de Término
           <span class="date-edited-badge" id="f-termino-badge" style="display:none">✏ editado</span>
@@ -1705,8 +1704,8 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
         <input type="date" id="f-termino" oninput="document.getElementById('f-termino-badge').style.display=''" title="Editável manualmente">
       </div>
     </div>
-    <div style="padding: 4px 0 10px">
-      <button type="button" class="date-calc-btn" onclick="calcularDatasModal()" title="Calcula Início (Aprovação+20 dias corridos) e Término (Início+Dias Vendidos úteis)" style="width:100%">⚡ Calcular Datas Automaticamente</button>
+    <div style="margin-bottom:14px">
+      <button type="button" class="date-calc-btn" onclick="calcularDatasModal()" style="width:100%;padding:10px" title="Calcula Início (Aprovação+20 dias corridos) e Término (Início+Dias Vendidos úteis)">⚡ Calcular Datas Automaticamente</button>
     </div>
     <div class="form-row">
       <div class="form-field">
@@ -2705,20 +2704,16 @@ function isDiaUtil(dataStr) {
 function addDiasUteis(dataBase, n) {
   if (!dataBase || n === 0) return dataBase;
   let d = new Date(dataBase + 'T00:00:00');
-  let count = 0;
+  // O dia de início já conta como dia útil 1 (se for dia útil)
+  // Então contamos n-1 dias adicionais a partir do dia seguinte
+  let count = isDiaUtil(dataBase) ? 1 : 0;
   const step = n > 0 ? 1 : -1;
   while (count < Math.abs(n)) {
     d.setDate(d.getDate() + step);
     const str = d.toISOString().split('T')[0];
     if (isDiaUtil(str)) count++;
   }
-  // Garante que a data resultante também seja dia útil
-  let result = d.toISOString().split('T')[0];
-  while (!isDiaUtil(result)) {
-    d.setDate(d.getDate() + 1);
-    result = d.toISOString().split('T')[0];
-  }
-  return result;
+  return d.toISOString().split('T')[0];
 }
 
 /**
