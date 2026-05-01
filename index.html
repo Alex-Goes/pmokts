@@ -1190,6 +1190,91 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
 .dg-resp-section-stats { display: flex; gap: 10px; font-size: 11px; }
 .dg-resp-stat { display: flex; align-items: center; gap: 4px; }
 
+/* ─── EDITOR DE TEMPLATES ─── */
+.tpl-editor-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  backdrop-filter: blur(4px); z-index: 500;
+  display: none; align-items: center; justify-content: center;
+}
+.tpl-editor-overlay.open { display: flex; }
+.tpl-editor-modal {
+  background: var(--panel); border: 1px solid var(--border2);
+  border-radius: 16px; width: 700px; max-width: 96vw;
+  max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6);
+}
+.tpl-editor-head {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.tpl-editor-body { flex: 1; overflow-y: auto; display: flex; gap: 0; }
+.tpl-sidebar {
+  width: 200px; flex-shrink: 0; border-right: 1px solid var(--border);
+  padding: 12px 8px; display: flex; flex-direction: column; gap: 4px;
+}
+.tpl-sidebar-btn {
+  padding: 10px 12px; border-radius: 8px; cursor: pointer;
+  font-family: 'Barlow', sans-serif; font-size: 12px; font-weight: 600;
+  border: 1px solid transparent; background: none; color: var(--text2);
+  text-align: left; transition: all .15s; display: flex; align-items: center; gap: 8px;
+}
+.tpl-sidebar-btn:hover { background: var(--card); color: var(--text); border-color: var(--border); }
+.tpl-sidebar-btn.active { background: rgba(0,212,255,.1); color: var(--accent); border-color: rgba(0,212,255,.3); }
+.tpl-content { flex: 1; padding: 16px 20px; overflow-y: auto; }
+.tpl-etapa-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 7px; padding: 8px 10px; margin-bottom: 6px;
+  transition: border-color .15s;
+}
+.tpl-etapa-row:hover { border-color: var(--border2); }
+.tpl-etapa-num {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px;
+  font-weight: 700; color: var(--text3); width: 20px; flex-shrink: 0; text-align: center;
+}
+.tpl-etapa-input {
+  flex: 1; background: none; border: none; color: var(--text);
+  font-family: 'Barlow', sans-serif; font-size: 13px; outline: none;
+  padding: 2px 4px;
+}
+.tpl-etapa-input:focus { color: var(--accent); }
+.tpl-etapa-del {
+  background: none; border: none; cursor: pointer; color: var(--text3);
+  font-size: 14px; padding: 2px 5px; border-radius: 4px; transition: all .15s; flex-shrink: 0;
+}
+.tpl-etapa-del:hover { color: var(--red); background: rgba(255,23,68,.1); }
+.tpl-drag-handle {
+  color: var(--text3); cursor: grab; font-size: 14px; flex-shrink: 0; padding: 0 3px;
+  user-select: none;
+}
+.tpl-add-row {
+  display: flex; gap: 8px; margin-top: 10px;
+}
+.tpl-add-input {
+  flex: 1; background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 7px; padding: 9px 12px; color: var(--text);
+  font-family: 'Barlow', sans-serif; font-size: 13px; outline: none;
+}
+.tpl-add-input:focus { border-color: var(--accent); }
+.tpl-editor-footer {
+  padding: 14px 24px; border-top: 1px solid var(--border);
+  display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0;
+}
+
+/* ─── BOTÃO CALCULAR DATAS ─── */
+.date-calc-btn {
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  border: none; border-radius: 7px; color: #fff;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
+  letter-spacing: .5px; padding: 6px 12px; cursor: pointer;
+  transition: opacity .15s; white-space: nowrap; text-transform: uppercase;
+}
+.date-calc-btn:hover { opacity: .85; }
+.date-edited-badge {
+  font-size: 9px; color: var(--yellow); font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; letter-spacing: .5px; margin-left: 4px;
+}
+
 /* ─── PRINT ─── */
 @media print {
   .topbar, .sidebar, .tabs, .proj-actions, .topbar-actions, .btn { display: none !important; }
@@ -1318,6 +1403,28 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
     </div>
   </div>
 </div>
+<!-- ══ EDITOR DE TEMPLATES ════════════════════════════════════════════ -->
+<div class="tpl-editor-overlay" id="tpl-editor-overlay">
+  <div class="tpl-editor-modal">
+    <div class="tpl-editor-head">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px">✏ Editor de Templates</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">Edite as etapas de cada disciplina. As alterações são salvas automaticamente.</div>
+      </div>
+      <button style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer" onclick="closeTplEditor()">✕</button>
+    </div>
+    <div class="tpl-editor-body">
+      <div class="tpl-sidebar" id="tpl-sidebar"></div>
+      <div class="tpl-content" id="tpl-content"></div>
+    </div>
+    <div class="tpl-editor-footer">
+      <button class="btn btn-ghost" onclick="resetTplToDefault()" title="Restaurar etapas padrão desta disciplina">↩ Restaurar Padrão</button>
+      <button class="btn btn-ghost" onclick="closeTplEditor()">Fechar</button>
+      <button class="btn btn-primary" onclick="salvarTemplate()">💾 Salvar Template</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL MINHA CONTA ══════════════════════════════════════════════ -->
 <div class="admin-overlay" id="modal-minha-conta">
   <div class="admin-modal" style="width:440px">
@@ -1572,22 +1679,32 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
     </div>
     <div class="form-row">
       <div class="form-field">
-        <label>Data de Aprovação ⭐</label>
-        <input type="date" id="f-aprovacao">
+        <label>Data de Aprovação ⭐
+          <button type="button" class="date-calc-btn" onclick="calcularDatasModal()" title="Calcula Início (Aprovação+20 dias úteis) e Término (Início+Dias Vendidos úteis)">⚡ Calcular Datas</button>
+        </label>
+        <input type="date" id="f-aprovacao" onchange="calcularDatasModal()">
       </div>
       <div class="form-field">
         <label>Data do TAP ⭐</label>
-        <input type="date" id="f-tap" title="TAP = Termo de Abertura do Projeto — gera cronograma automático">
+        <input type="date" id="f-tap" title="TAP = Termo de Abertura do Projeto">
       </div>
     </div>
     <div class="form-row">
       <div class="form-field">
-        <label>Data de Início <span style="color:var(--accent);font-size:9px">(auto via TAP)</span></label>
-        <input type="date" id="f-inicio">
+        <label>
+          Data de Início
+          <span class="date-edited-badge" id="f-inicio-badge" style="display:none">✏ editado</span>
+          <span style="color:var(--text3);font-size:9px;margin-left:4px">(Aprovação +20 dias úteis)</span>
+        </label>
+        <input type="date" id="f-inicio" oninput="onInicioManualChange()" title="Editável — ao alterar, o Término será recalculado automaticamente">
       </div>
       <div class="form-field">
-        <label>Data de Término <span style="color:var(--accent);font-size:9px">(auto via Aprovação+Dias)</span></label>
-        <input type="date" id="f-termino">
+        <label>
+          Data de Término
+          <span class="date-edited-badge" id="f-termino-badge" style="display:none">✏ editado</span>
+          <span style="color:var(--text3);font-size:9px;margin-left:4px">(Início + Dias Úteis)</span>
+        </label>
+        <input type="date" id="f-termino" oninput="document.getElementById('f-termino-badge').style.display=''" title="Editável manualmente">
       </div>
     </div>
     <div class="form-row">
@@ -1609,13 +1726,15 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
       <textarea id="f-escopo" placeholder="Descreva brevemente o escopo do projeto..."></textarea>
     </div>
     <div class="form-field">
-      <label>Adicionar Etapas Padrão</label>
+      <label>Adicionar Etapas Padrão
+        <button type="button" class="date-calc-btn" onclick="openTemplateEditor()" style="margin-left:8px" title="Editar as etapas de cada disciplina">✏ Editar Templates</button>
+      </label>
       <select id="f-template">
         <option value="">Nenhum — cadastrar manualmente</option>
-        <option value="cftv">📷 CFTV IP Completo (12 etapas)</option>
-        <option value="alarme">🚨 Alarme + Monitoramento (8 etapas)</option>
-        <option value="acesso">🔐 Controle de Acesso (10 etapas)</option>
-        <option value="completo">⚡ Solução Completa CFTV+Alarme+Acesso (15 etapas)</option>
+        <option value="cftv">📷 CFTV IP Completo</option>
+        <option value="alarme">🚨 Alarme + Monitoramento</option>
+        <option value="acesso">🔐 Controle de Acesso</option>
+        <option value="completo">⚡ Solução Completa CFTV+Alarme+Acesso</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -1837,12 +1956,37 @@ let projId = null;
 let currentTab = 'lista';
 let etapaEditId = null;
 
-const TEMPLATES = {
-  cftv: ["Levantamento Técnico em Campo","Projeto Executivo (Layout + Diagrama)","Aprovação do Projeto pelo Cliente","Compra de Materiais e Equipamentos","Mobilização da Equipe","Infraestrutura — Cabeamento Estruturado","Instalação de Câmeras e DVR/NVR","Configuração e Parametrização","Testes Funcionais e Ajustes","Treinamento do Usuário","Entrega Técnica Formal","As Built e Documentação Final"],
-  alarme: ["Levantamento Técnico","Aprovação do Projeto","Compra de Materiais","Instalação da Central e Periféricos","Cabeamento e Rede","Programação da Central","Integração com Monitoramento","Entrega e Treinamento"],
-  acesso: ["Levantamento e Mapeamento de Pontos","Projeto de Controle de Acesso","Aprovação do Projeto","Aquisição de Equipamentos","Infraestrutura Elétrica e Rede","Instalação de Controladores e Leitoras","Configuração de Software","Cadastro de Usuários e Cartões","Testes e Integração","Entrega e Treinamento"],
+// Templates padrão (fallback)
+const TEMPLATES_DEFAULT = {
+  cftv:     ["Levantamento Técnico em Campo","Projeto Executivo (Layout + Diagrama)","Aprovação do Projeto pelo Cliente","Compra de Materiais e Equipamentos","Mobilização da Equipe","Infraestrutura — Cabeamento Estruturado","Instalação de Câmeras e DVR/NVR","Configuração e Parametrização","Testes Funcionais e Ajustes","Treinamento do Usuário","Entrega Técnica Formal","As Built e Documentação Final"],
+  alarme:   ["Levantamento Técnico","Aprovação do Projeto","Compra de Materiais","Instalação da Central e Periféricos","Cabeamento e Rede","Programação da Central","Integração com Monitoramento","Entrega e Treinamento"],
+  acesso:   ["Levantamento e Mapeamento de Pontos","Projeto de Controle de Acesso","Aprovação do Projeto","Aquisição de Equipamentos","Infraestrutura Elétrica e Rede","Instalação de Controladores e Leitoras","Configuração de Software","Cadastro de Usuários e Cartões","Testes e Integração","Entrega e Treinamento"],
   completo: ["Levantamento Técnico Integrado","Projeto Executivo Completo","Aprovação e ART","Compra de Materiais","Mobilização","Infraestrutura Elétrica","Cabeamento CFTV e Dados","Instalação de Câmeras","Instalação de Alarme e Sensores","Controle de Acesso — Hardware","Configuração de Sistemas","Integração das Plataformas","Testes Gerais de Aceitação","Treinamento de Operadores","As Built e Entrega Final"]
 };
+
+const TEMPLATES_META = {
+  cftv:     { icon: '📷', label: 'CFTV IP Completo' },
+  alarme:   { icon: '🚨', label: 'Alarme + Monitoramento' },
+  acesso:   { icon: '🔐', label: 'Controle de Acesso' },
+  completo: { icon: '⚡', label: 'Solução Completa CFTV+Alarme+Acesso' },
+};
+
+// TEMPLATES — carrega do localStorage ou usa o padrão
+function getTemplates() {
+  const saved = localStorage.getItem('pmokts_templates');
+  if (saved) {
+    try { return { ...TEMPLATES_DEFAULT, ...JSON.parse(saved) }; } catch(e) {}
+  }
+  return { ...TEMPLATES_DEFAULT };
+}
+function saveTemplates(tpls) {
+  localStorage.setItem('pmokts_templates', JSON.stringify(tpls));
+}
+// Alias para uso direto (substitui o antigo const TEMPLATES = {...})
+const TEMPLATES = new Proxy({}, {
+  get: (_, key) => getTemplates()[key],
+  has: (_, key) => key in getTemplates(),
+});
 
 const STATUS_COLOR = {
   "Pendente": "var(--text2)",
@@ -2219,11 +2363,10 @@ function openModalProjeto(isEdit=false) {
     ['f-proposta','f-nome','f-cliente','f-local','f-inicio','f-termino','f-dias','f-valor','f-responsavel','f-escopo','f-tap','f-aprovacao'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('f-status').value = 'Em andamento';
     document.getElementById('f-template').value = '';
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('f-inicio').value = today;
-    document.getElementById('f-aprovacao').value = today;
-    document.getElementById('f-tap').value = today;
   }
+  atualizarSelectTemplates();
+  document.getElementById('f-inicio-badge').style.display = 'none';
+  document.getElementById('f-termino-badge').style.display = 'none';
   document.getElementById('modal-projeto').classList.add('open');
 }
 
@@ -2246,6 +2389,9 @@ function editarProjeto() {
   document.getElementById('f-escopo').value = p.escopo||'';
   document.getElementById('f-status').value = p.status||'Em andamento';
   document.getElementById('f-template').value = '';
+  atualizarSelectTemplates();
+  document.getElementById('f-inicio-badge').style.display = 'none';
+  document.getElementById('f-termino-badge').style.display = 'none';
   document.getElementById('modal-projeto').classList.add('open');
 }
 
@@ -4629,6 +4775,210 @@ async function adminResetSenha(userId) {
   toast(`✅ Senha de @${u.usuario} redefinida com sucesso!`);
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// CÁLCULO INTELIGENTE DE DATAS NO MODAL
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Calcula Início = Aprovação + 20 dias corridos
+ * Calcula Término = Início + Dias Vendidos (dias úteis)
+ * Chamado pelo botão ⚡ Calcular e pelo onchange da aprovação
+ */
+function calcularDatasModal() {
+  const aprovacao = document.getElementById('f-aprovacao').value;
+  const dias      = parseInt(document.getElementById('f-dias').value) || 0;
+
+  if (!aprovacao) return;
+
+  // Início = Aprovação + 20 dias CORRIDOS (conforme planilha original)
+  const inicioCalc = addDias(aprovacao, 20);
+  document.getElementById('f-inicio').value = inicioCalc;
+  document.getElementById('f-inicio-badge').style.display = 'none';
+
+  // Término = Início + Dias Vendidos em DIAS ÚTEIS
+  if (dias > 0) {
+    const terminoCalc = addDiasUteis(inicioCalc, dias);
+    document.getElementById('f-termino').value = terminoCalc;
+    document.getElementById('f-termino-badge').style.display = 'none';
+  }
+}
+
+/**
+ * Quando o usuário edita manualmente a Data de Início:
+ * recalcula o Término = novo Início + Dias Vendidos úteis
+ * e marca o badge "✏ editado" no Início
+ */
+function onInicioManualChange() {
+  document.getElementById('f-inicio-badge').style.display = '';
+  const inicio = document.getElementById('f-inicio').value;
+  const dias   = parseInt(document.getElementById('f-dias').value) || 0;
+  if (inicio && dias > 0) {
+    const terminoCalc = addDiasUteis(inicio, dias);
+    document.getElementById('f-termino').value = terminoCalc;
+    document.getElementById('f-termino-badge').style.display = 'none';
+  }
+}
+
+// Atualiza o select de templates com a contagem atual de etapas
+function atualizarSelectTemplates() {
+  const sel = document.getElementById('f-template');
+  if (!sel) return;
+  const tpls = getTemplates();
+  sel.innerHTML = '<option value="">Nenhum — cadastrar manualmente</option>' +
+    Object.keys(TEMPLATES_META).map(key => {
+      const m = TEMPLATES_META[key];
+      const count = (tpls[key] || []).length;
+      return `<option value="${key}">${m.icon} ${m.label} (${count} etapas)</option>`;
+    }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EDITOR DE TEMPLATES
+// ═══════════════════════════════════════════════════════════════════
+
+let tplAtivo = 'cftv'; // disciplina ativa no editor
+
+function openTemplateEditor() {
+  tplAtivo = 'cftv';
+  renderTplSidebar();
+  renderTplContent();
+  document.getElementById('tpl-editor-overlay').classList.add('open');
+}
+
+function closeTplEditor() {
+  document.getElementById('tpl-editor-overlay').classList.remove('open');
+  atualizarSelectTemplates(); // atualiza contagem no select
+}
+
+function renderTplSidebar() {
+  const tpls = getTemplates();
+  document.getElementById('tpl-sidebar').innerHTML = Object.keys(TEMPLATES_META).map(key => {
+    const m = TEMPLATES_META[key];
+    const count = (tpls[key] || []).length;
+    return `<button class="tpl-sidebar-btn ${key === tplAtivo ? 'active' : ''}" onclick="selecionarTpl('${key}')">
+      <span style="font-size:16px">${m.icon}</span>
+      <div style="line-height:1.3">
+        <div style="font-size:11px;font-weight:700">${m.label}</div>
+        <div style="font-size:10px;opacity:.6">${count} etapas</div>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+function selecionarTpl(key) {
+  tplAtivo = key;
+  renderTplSidebar();
+  renderTplContent();
+}
+
+function renderTplContent() {
+  const tpls  = getTemplates();
+  const etapas = tpls[tplAtivo] || [];
+  const meta   = TEMPLATES_META[tplAtivo];
+
+  const rowsHTML = etapas.map((nome, i) => `
+    <div class="tpl-etapa-row" id="tpl-row-${i}" draggable="true"
+      ondragstart="tplDragStart(${i})" ondragover="tplDragOver(event,${i})" ondrop="tplDrop(event,${i})">
+      <span class="tpl-drag-handle" title="Arrastar para reordenar">⠿</span>
+      <span class="tpl-etapa-num">${String(i+1).padStart(2,'0')}</span>
+      <input class="tpl-etapa-input" type="text" value="${nome.replace(/"/g,'&quot;')}"
+        id="tpl-input-${i}" placeholder="Nome da etapa"
+        onchange="tplUpdateEtapa(${i}, this.value)">
+      <button class="tpl-etapa-del" onclick="tplRemoverEtapa(${i})" title="Remover etapa">✕</button>
+    </div>`).join('');
+
+  document.getElementById('tpl-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <span style="font-size:22px">${meta.icon}</span>
+      <div>
+        <div style="font-weight:700;font-size:15px">${meta.label}</div>
+        <div style="font-size:11px;color:var(--text2)">${etapas.length} etapas configuradas</div>
+      </div>
+    </div>
+    <div id="tpl-rows">${rowsHTML}</div>
+    <div class="tpl-add-row">
+      <input class="tpl-add-input" type="text" id="tpl-nova-etapa"
+        placeholder="Nome da nova etapa..."
+        onkeydown="if(event.key==='Enter')tplAdicionarEtapa()">
+      <button class="btn btn-primary" onclick="tplAdicionarEtapa()" style="white-space:nowrap">＋ Adicionar</button>
+    </div>
+  `;
+}
+
+function tplUpdateEtapa(i, valor) {
+  const tpls = getTemplates();
+  tpls[tplAtivo][i] = valor;
+  saveTemplates(tpls);
+}
+
+function tplAdicionarEtapa() {
+  const input = document.getElementById('tpl-nova-etapa');
+  const nome  = input.value.trim();
+  if (!nome) return;
+  const tpls = getTemplates();
+  if (!tpls[tplAtivo]) tpls[tplAtivo] = [];
+  tpls[tplAtivo].push(nome);
+  saveTemplates(tpls);
+  input.value = '';
+  renderTplContent();
+  renderTplSidebar();
+  toast(`✅ Etapa "${nome}" adicionada!`, 1500);
+}
+
+function tplRemoverEtapa(i) {
+  const tpls = getTemplates();
+  const nome = tpls[tplAtivo][i];
+  if (!confirm(`Remover a etapa "${nome}"?`)) return;
+  tpls[tplAtivo].splice(i, 1);
+  saveTemplates(tpls);
+  renderTplContent();
+  renderTplSidebar();
+}
+
+function salvarTemplate() {
+  // Lê todos os inputs e salva
+  const tpls   = getTemplates();
+  const inputs = document.querySelectorAll('[id^="tpl-input-"]');
+  const etapas = [];
+  inputs.forEach(inp => {
+    const v = inp.value.trim();
+    if (v) etapas.push(v);
+  });
+  tpls[tplAtivo] = etapas;
+  saveTemplates(tpls);
+  renderTplContent();
+  renderTplSidebar();
+  atualizarSelectTemplates();
+  toast(`💾 Template "${TEMPLATES_META[tplAtivo].label}" salvo com ${etapas.length} etapas!`);
+}
+
+function resetTplToDefault() {
+  const meta = TEMPLATES_META[tplAtivo];
+  if (!confirm(`Restaurar as etapas padrão de "${meta.label}"? Suas alterações serão perdidas.`)) return;
+  const tpls = getTemplates();
+  tpls[tplAtivo] = [...TEMPLATES_DEFAULT[tplAtivo]];
+  saveTemplates(tpls);
+  renderTplContent();
+  renderTplSidebar();
+  toast(`↩ Template "${meta.label}" restaurado ao padrão (${tpls[tplAtivo].length} etapas)`);
+}
+
+// Drag & Drop para reordenar etapas
+let tplDragIdx = null;
+function tplDragStart(i) { tplDragIdx = i; }
+function tplDragOver(e, i) { e.preventDefault(); }
+function tplDrop(e, i) {
+  e.preventDefault();
+  if (tplDragIdx === null || tplDragIdx === i) return;
+  const tpls  = getTemplates();
+  const arr   = tpls[tplAtivo];
+  const moved = arr.splice(tplDragIdx, 1)[0];
+  arr.splice(i, 0, moved);
+  saveTemplates(tpls);
+  tplDragIdx = null;
+  renderTplContent();
+}
+
 // ─── INIT ───
 // renderSidebar e openProjeto são chamados por iniciarSistema() após carregar dados
 
@@ -4638,6 +4988,9 @@ document.querySelectorAll('.overlay').forEach(o => {
 });
 document.getElementById('admin-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('admin-overlay')) closeAdminPanel();
+});
+document.getElementById('tpl-editor-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('tpl-editor-overlay')) closeTplEditor();
 });
 document.getElementById('modal-minha-conta').addEventListener('click', e => {
   if (e.target === document.getElementById('modal-minha-conta')) closeMinhaConta();
