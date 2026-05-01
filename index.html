@@ -1679,9 +1679,7 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
     </div>
     <div class="form-row">
       <div class="form-field">
-        <label>Data de Aprovação ⭐
-          <button type="button" class="date-calc-btn" onclick="calcularDatasModal()" title="Calcula Início (Aprovação+20 dias úteis) e Término (Início+Dias Vendidos úteis)">⚡ Calcular Datas</button>
-        </label>
+        <label>Data de Aprovação ⭐</label>
         <input type="date" id="f-aprovacao" onchange="calcularDatasModal()">
       </div>
       <div class="form-field">
@@ -1694,7 +1692,7 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
         <label>
           Data de Início
           <span class="date-edited-badge" id="f-inicio-badge" style="display:none">✏ editado</span>
-          <span style="color:var(--text3);font-size:9px;margin-left:4px">(Aprovação +20 dias úteis)</span>
+          <span style="color:var(--text3);font-size:9px;margin-left:4px">(Aprovação +20 dias corridos)</span>
         </label>
         <input type="date" id="f-inicio" oninput="onInicioManualChange()" title="Editável — ao alterar, o Término será recalculado automaticamente">
       </div>
@@ -1706,6 +1704,9 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
         </label>
         <input type="date" id="f-termino" oninput="document.getElementById('f-termino-badge').style.display=''" title="Editável manualmente">
       </div>
+    </div>
+    <div style="padding: 4px 0 10px">
+      <button type="button" class="date-calc-btn" onclick="calcularDatasModal()" title="Calcula Início (Aprovação+20 dias corridos) e Término (Início+Dias Vendidos úteis)" style="width:100%">⚡ Calcular Datas Automaticamente</button>
     </div>
     <div class="form-row">
       <div class="form-field">
@@ -4791,7 +4792,10 @@ function calcularDatasModal() {
   if (!aprovacao) return;
 
   // Início = Aprovação + 20 dias CORRIDOS (conforme planilha original)
-  const inicioCalc = addDias(aprovacao, 20);
+  const d = new Date(aprovacao + 'T00:00:00');
+  d.setDate(d.getDate() + 20);
+  const inicioCalc = d.toISOString().split('T')[0];
+
   document.getElementById('f-inicio').value = inicioCalc;
   document.getElementById('f-inicio-badge').style.display = 'none';
 
