@@ -2482,7 +2482,8 @@ function editarProjeto() {
   document.getElementById('f-status').value = p.status||'Em andamento';
   document.getElementById('f-template').value = '';
   atualizarSelectTemplates();
-  document.getElementById('f-inicio-badge').style.display = 'none';
+  // Mostra badge "editado" se o projeto tem início manual definido
+  document.getElementById('f-inicio-badge').style.display = p.inicioManual ? '' : 'none';
   document.getElementById('f-termino-badge').style.display = 'none';
   document.getElementById('modal-projeto').classList.add('open');
 }
@@ -2491,12 +2492,23 @@ async function salvarProjeto() {
   const nome = document.getElementById('f-nome').value.trim();
   if (!nome) { toast('⚠️ Informe o nome do projeto!'); return; }
 
-  const editId = document.getElementById('proj-edit-id').value;
-  const tpl = document.getElementById('f-template').value;
+  const editId    = document.getElementById('proj-edit-id').value;
+  const tpl       = document.getElementById('f-template').value;
   const aprovacao = document.getElementById('f-aprovacao').value;
-  const tap = document.getElementById('f-tap').value;
-  const dias = document.getElementById('f-dias').value;
-  const crono = calcularCronograma(aprovacao, tap, parseInt(dias)||0);
+  const tap       = document.getElementById('f-tap').value;
+  const dias      = document.getElementById('f-dias').value;
+
+  // Detecta se o início foi editado manualmente (badge "✏ editado" visível)
+  const inicioBadge  = document.getElementById('f-inicio-badge');
+  const inicioInput  = document.getElementById('f-inicio').value;
+  const inicioManual = (inicioBadge && inicioBadge.style.display !== 'none' && inicioInput) ? inicioInput : null;
+
+  // Calcula cronograma: manual usa o início definido, automático usa aprovação+20d
+  const crono = calcularCronograma(aprovacao, tap, parseInt(dias)||0, inicioManual);
+
+  // O início e término finais: prioriza o campo do modal (pode ter sido editado)
+  const inicioFinal  = inicioInput  || crono.inicioProj  || '';
+  const terminoFinal = document.getElementById('f-termino').value || crono.terminoProj || '';
 
   if (editId) {
     const p = db.projetos.find(x => x.id === editId);
@@ -2505,8 +2517,9 @@ async function salvarProjeto() {
       nome, cliente: document.getElementById('f-cliente').value,
       local: document.getElementById('f-local').value,
       aprovacao, tap, dias,
-      inicio: crono.inicioProj || document.getElementById('f-inicio').value,
-      termino: crono.terminoProj || document.getElementById('f-termino').value,
+      inicio:   inicioFinal,
+      termino:  terminoFinal,
+      inicioManual: inicioManual || null,
       valor: document.getElementById('f-valor').value,
       responsavel: document.getElementById('f-responsavel').value,
       escopo: document.getElementById('f-escopo').value,
@@ -2524,8 +2537,9 @@ async function salvarProjeto() {
       cliente: document.getElementById('f-cliente').value,
       local: document.getElementById('f-local').value,
       aprovacao, tap, dias,
-      inicio: crono.inicioProj || document.getElementById('f-inicio').value,
-      termino: crono.terminoProj || document.getElementById('f-termino').value,
+      inicio:   inicioFinal,
+      termino:  terminoFinal,
+      inicioManual: inicioManual || null,
       valor: document.getElementById('f-valor').value,
       responsavel: document.getElementById('f-responsavel').value,
       escopo: document.getElementById('f-escopo').value,
@@ -2851,8 +2865,8 @@ function diffDias(previsto, realizado) {
  *   AA4 = W4 + 5    → Emissão do AS Built
  *   AC4 = AA4 + 1   → Fechamento do Projeto
  */
-function calcularCronograma(aprovacao, tap, diasVendidos) {
-  if (!aprovacao && !tap) return {};
+function calcularCronograma(aprovacao, tap, diasVendidos, inicioManual) {
+  if (!aprovacao && !tap && !inicioManual) return {};
 
   const d = {};
 
@@ -2860,17 +2874,28 @@ function calcularCronograma(aprovacao, tap, diasVendidos) {
   d.grupoTelegramPrev  = addDias(tap, 1);        // TAP + 1
   d.listaComprasPrev   = addDias(tap, 3);        // TAP + 3
 
-  // ETAPAS DERIVADAS DA APROVAÇÃO
-  d.elaboracaoProjPrev = addDias(aprovacao, 16); // APROV + 16
-  d.impressaoProjPrev  = addDias(d.elaboracaoProjPrev, 1); // Elab + 1
-  d.handoverEquipePrev = addDias(aprovacao, 19); // APROV + 19
-  d.inicioProj         = addDias(aprovacao, 20); // APROV + 20
-  d.terminoProj        = addDias(d.inicioProj, diasVendidos); // Início + Dias
+  // INÍCIO: usa manual se fornecido, senão calcula Aprovação + 20 dias corridos
+  if (inicioManual) {
+    // Regra Manual: início definido pelo usuário
+    // As etapas ANTES do início são recalculadas de trás para frente
+    d.inicioProj         = inicioManual;
+    d.handoverEquipePrev = addDias(inicioManual, -1);  // 1 dia antes do início
+    d.impressaoProjPrev  = addDias(inicioManual, -2);  // 2 dias antes
+    d.elaboracaoProjPrev = addDias(inicioManual, -3);  // 3 dias antes
+  } else {
+    // Regra Automática: baseado na aprovação
+    d.elaboracaoProjPrev = addDias(aprovacao, 16); // APROV + 16
+    d.impressaoProjPrev  = addDias(d.elaboracaoProjPrev, 1); // Elab + 1
+    d.handoverEquipePrev = addDias(aprovacao, 19); // APROV + 19
+    d.inicioProj         = addDias(aprovacao, 20); // APROV + 20
+  }
+
+  d.terminoProj        = addDiasUteis(d.inicioProj, diasVendidos); // Início + Dias Úteis
 
   // ETAPAS PÓS-ENTREGA
-  d.infoAsBuiltPrev    = d.terminoProj;                    // = Término
-  d.emissaoAsBuiltPrev = addDias(d.terminoProj, 5);        // Término + 5
-  d.fechamentoPrev     = addDias(d.emissaoAsBuiltPrev, 1); // AS Built + 1
+  d.infoAsBuiltPrev    = d.terminoProj;
+  d.emissaoAsBuiltPrev = addDias(d.terminoProj, 5);
+  d.fechamentoPrev     = addDias(d.emissaoAsBuiltPrev, 1);
 
   return d;
 }
@@ -3419,7 +3444,9 @@ function bindFluxoEventos(p) {
     const tap  = tapEl.value;
     const dias = parseInt(diasEl.value) || 0;
 
-    const crono = calcularCronograma(apr, tap, dias);
+    // Respeita início manual salvo no projeto (se existir)
+    const inicioManual = p.inicioManual || null;
+    const crono = calcularCronograma(apr, tap, dias, inicioManual);
 
     p.aprovacao = apr;
     p.tap       = tap;
@@ -4922,13 +4949,13 @@ function calcularDatasModal() {
 
   if (!aprovacao) return;
 
-  // Início = Aprovação + 20 dias CORRIDOS (conforme planilha original)
+  // Início = Aprovação + 20 dias CORRIDOS — regra automática
   const d = new Date(aprovacao + 'T00:00:00');
   d.setDate(d.getDate() + 20);
   const inicioCalc = d.toISOString().split('T')[0];
 
   document.getElementById('f-inicio').value = inicioCalc;
-  document.getElementById('f-inicio-badge').style.display = 'none';
+  document.getElementById('f-inicio-badge').style.display = 'none'; // remove badge manual
 
   // Término = Início + Dias Vendidos em DIAS ÚTEIS
   if (dias > 0) {
@@ -4940,8 +4967,11 @@ function calcularDatasModal() {
 
 /**
  * Quando o usuário edita manualmente a Data de Início:
- * recalcula o Término = novo Início + Dias Vendidos úteis
- * e marca o badge "✏ editado" no Início
+ * - Marca badge "✏ editado"
+ * - Recalcula Término = novo Início + Dias Vendidos úteis
+ * - NÃO altera Aprovação/TAP (essas permanecem)
+ * A data de início manual será salva no projeto como inicioManual
+ * e usada em calcularCronograma para reposicionar todas as etapas do fluxo
  */
 function onInicioManualChange() {
   document.getElementById('f-inicio-badge').style.display = '';
