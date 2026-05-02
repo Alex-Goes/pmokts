@@ -5058,24 +5058,31 @@ async function salvarPct(i, valor) {
   if (!p.cronoPct) p.cronoPct = {};
   p.cronoPct[chaveCalc] = pct;
 
-  // Se 100% e ainda sem data realizada → sugerir marcar como realizado hoje
+  // Se 100% e ainda sem data realizada → preenche realizado com hoje
   if (pct === 100 && !(p.cronoRealizado && p.cronoRealizado[chaveReal])) {
     const hoje = new Date().toISOString().split('T')[0];
     if (!p.cronoRealizado) p.cronoRealizado = {};
     p.cronoRealizado[chaveReal] = hoje;
-    // Atualiza o input de data realizada na tabela
     const realEl = document.getElementById(`crono-real-${i}`);
     if (realEl) {
       realEl.value = hoje;
       const prevInputEl = document.getElementById(`crono-prev-input-${i}`);
-      const deltaEl = document.getElementById(`crono-delta-${i}`);
+      const deltaEl     = document.getElementById(`crono-delta-${i}`);
       if (deltaEl && prevInputEl) atualizarDelta(deltaEl, prevInputEl.value, hoje);
     }
     toast(`✅ 100% — Data de realização preenchida automaticamente: ${fmtDate(hoje)}`, 3000);
   }
 
   await saveAsync(projId);
-  atualizarDashboardFluxo(p);
+
+  // Re-renderiza a aba inteira para garantir que o dashboard (linha do tempo,
+  // kanban, barras de progresso) reflita o novo % — o input já perdeu foco
+  // então não há risco de perder o cursor do usuário
+  if (currentTab === 'fluxo') {
+    const el = document.getElementById('tab-content');
+    el.innerHTML = renderFluxo(p);
+    bindFluxoEventos(p);
+  }
 }
 
 // ─── INIT ───
