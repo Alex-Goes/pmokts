@@ -1190,6 +1190,21 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
 .dg-resp-section-stats { display: flex; gap: 10px; font-size: 11px; }
 .dg-resp-stat { display: flex; align-items: center; gap: 4px; }
 
+/* ─── PORCENTAGEM NA TABELA FLUXO ─── */
+.crono-pct-wrap {
+  display: flex; align-items: center; gap: 6px; margin-top: 6px;
+}
+.crono-pct-input {
+  width: 56px; background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 5px; color: var(--text); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; padding: 3px 6px;
+  text-align: center; outline: none; transition: border-color .2s;
+}
+.crono-pct-input:focus { border-color: var(--accent); }
+.crono-pct-bar-wrap { flex: 1; min-width: 60px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.crono-pct-bar { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
+.crono-pct-label { font-size: 10px; color: var(--text3); font-family: 'Barlow Condensed', sans-serif; white-space: nowrap; }
+
 /* ─── EDITOR DE TEMPLATES ─── */
 .tpl-editor-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.75);
@@ -2787,16 +2802,16 @@ function calcularCronograma(aprovacao, tap, diasVendidos) {
 // ─── DEFINIÇÃO DAS LINHAS DO CRONOGRAMA ───
 // Cada item: [chaveCalculo, chaveRealizado, ícone, nome, formula, highlight]
 const CRONO_LINHAS = [
-  ['grupoTelegramPrev',  'grupoTelegram',  '📲', 'Criação do Grupo AS Built (Telegram)', 'TAP + 1 dia',           false],
-  ['listaComprasPrev',   'listaCompras',   '🛒', 'Envio da Lista para Compras',          'TAP + 3 dias',          false],
-  ['elaboracaoProjPrev', 'elaboracaoProj', '📐', 'Elaboração de Projetos',               'Aprovação + 16 dias',   false],
-  ['impressaoProjPrev',  'impressaoProj',  '🖨', 'Impressão dos Projetos',               'Elab. Proj. + 1 dia',   false],
-  ['handoverEquipePrev', 'handoverEquipe', '🤝', 'Handover com a Equipe',                'Aprovação + 19 dias',   false],
-  ['inicioProj',         'inicioProj',     '🚀', 'Início do Projeto',                    'Aprovação + 20 dias',   true ],
-  ['terminoProj',        'terminoProj',    '🏁', 'Término do Projeto',                   'Início + Dias Vendidos',true ],
-  ['infoAsBuiltPrev',    'infoAsBuilt',    '📝', 'Informações do AS Built',              '= Data de Término',     false],
-  ['emissaoAsBuiltPrev', 'emissaoAsBuilt', '📄', 'Emissão do AS Built',                  'Término + 5 dias',      false],
-  ['fechamentoPrev',     'fechamento',     '🔒', 'Fechamento do Projeto',                'AS Built + 1 dia',      false],
+  ['grupoTelegramPrev',  'grupoTelegram',  '📲', 'Criação do Grupo AS Built (Telegram)', 'TAP + 1 dia',           false, false],
+  ['listaComprasPrev',   'listaCompras',   '🛒', 'Envio da Lista para Compras',          'TAP + 3 dias',          false, true ],
+  ['elaboracaoProjPrev', 'elaboracaoProj', '📐', 'Elaboração de Projetos',               'Aprovação + 16 dias',   false, true ],
+  ['impressaoProjPrev',  'impressaoProj',  '🖨', 'Impressão dos Projetos',               'Elab. Proj. + 1 dia',   false, true ],
+  ['handoverEquipePrev', 'handoverEquipe', '🤝', 'Handover com a Equipe',                'Aprovação + 19 dias',   false, true ],
+  ['inicioProj',         'inicioProj',     '🚀', 'Início do Projeto',                    'Aprovação + 20 dias',   true,  false],
+  ['terminoProj',        'terminoProj',    '🏁', 'Término do Projeto',                   'Início + Dias Vendidos',true,  false],
+  ['infoAsBuiltPrev',    'infoAsBuilt',    '📝', 'Informações do AS Built',              '= Data de Término',     false, true ],
+  ['emissaoAsBuiltPrev', 'emissaoAsBuilt', '📄', 'Emissão do AS Built',                  'Término + 5 dias',      false, false],
+  ['fechamentoPrev',     'fechamento',     '🔒', 'Fechamento do Projeto',                'AS Built + 1 dia',      false, false],
 ];
 
 // ─── RENDER FLUXO (com dashboard de gestão visual) ───
@@ -2809,18 +2824,20 @@ function renderFluxo(p) {
   // ── Calcular status de cada etapa (ignora N/A) ────────────────────────────
   const cronoNA = p.cronoNA || {};
   const etapasStatus = CRONO_LINHAS.map((linha, i) => {
-    const [chaveCalc, chaveReal, icone, nome] = linha;
-    if (cronoNA[chaveCalc]) return { i, icone, nome, status: 'N/A', cor: 'var(--text3)', bg: 'rgba(255,255,255,.03)', previsto:'', realizado:'', delta:null, isNA:true };
-    // Override manual tem prioridade sobre o calculado
+    const [chaveCalc, chaveReal, icone, nome,,, hasPct] = linha;
+    if (cronoNA[chaveCalc]) return { i, icone, nome, status: 'N/A', cor: 'var(--text3)', bg: 'rgba(255,255,255,.03)', previsto:'', realizado:'', delta:null, isNA:true, pct:0 };
     const previsto  = overrides[chaveCalc] || crono[chaveCalc] || '';
     const realizado = rc[chaveReal] || '';
     const delta     = diffDias(previsto, realizado);
+    const pctSalvo  = hasPct ? ((p.cronoPct && p.cronoPct[chaveCalc] !== undefined) ? p.cronoPct[chaveCalc] : 0) : (realizado ? 100 : 0);
 
     let status, cor, bg;
     if (realizado) {
-      if (delta === 0)     { status = 'No Prazo';   cor = 'var(--green)'; bg = 'rgba(0,230,118,.12)'; }
-      else if (delta > 0)  { status = 'Atrasado';   cor = 'var(--red)';   bg = 'rgba(255,23,68,.12)'; }
-      else                 { status = 'Antecipado'; cor = 'var(--accent)';bg = 'rgba(0,212,255,.12)'; }
+      if (delta === 0)    { status = 'No Prazo';   cor = 'var(--green)'; bg = 'rgba(0,230,118,.12)'; }
+      else if (delta > 0) { status = 'Atrasado';   cor = 'var(--red)';   bg = 'rgba(255,23,68,.12)'; }
+      else                { status = 'Antecipado'; cor = 'var(--accent)';bg = 'rgba(0,212,255,.12)'; }
+    } else if (hasPct && pctSalvo > 0 && pctSalvo < 100) {
+      status = 'Em Andamento'; cor = 'var(--accent)'; bg = 'rgba(0,212,255,.08)';
     } else if (previsto && previsto < hoje) {
       status = 'Atrasado'; cor = 'var(--red)'; bg = 'rgba(255,23,68,.08)';
     } else if (previsto) {
@@ -2829,28 +2846,28 @@ function renderFluxo(p) {
       status = 'Sem Data'; cor = 'var(--text3)'; bg = 'rgba(255,255,255,.03)';
     }
 
-    // Calcula % avanço individual: concluído = 100%, atrasado sem realizado = 0%
-    const pct = realizado ? 100 : 0;
-
-    return { i, icone, nome, previsto, realizado, delta, status, cor, bg, pct,
-             chaveCalc, chaveReal };
+    return { i, icone, nome, previsto, realizado, delta, status, cor, bg, pct: pctSalvo, hasPct,
+             chaveCalc, chaveReal, isNA: false };
   });
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const naoAplicaveis = etapasStatus.filter(e => e.isNA).length;
   const total      = etapasStatus.filter(e => !e.isNA).length;
   const concluidas = etapasStatus.filter(e => e.realizado && !e.isNA).length;
+  const emAndamento= etapasStatus.filter(e => e.status === 'Em Andamento').length;
   const atrasadas  = etapasStatus.filter(e => e.status === 'Atrasado').length;
   const antecipadas= etapasStatus.filter(e => e.status === 'Antecipado').length;
   const pendentes  = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
-  const pctGeral   = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+  // Progresso considera % parciais das atividades com hasPct
+  const pctGeral   = total > 0 ? Math.round(etapasStatus.filter(e=>!e.isNA).reduce((a,e) => a + (e.pct||0), 0) / (total * 100) * 100) : 0;
 
   // ── Kanban por status ─────────────────────────────────────────────────────
   const kanbanCols = [
-    { key: 'Pendente',   label: 'Pendente / Aguardando', cor: 'var(--yellow)', icon: '⏳' },
-    { key: 'No Prazo',   label: 'No Prazo',              cor: 'var(--green)',  icon: '✅' },
-    { key: 'Atrasado',   label: 'Atrasado',              cor: 'var(--red)',    icon: '🔴' },
-    { key: 'Antecipado', label: 'Antecipado',            cor: 'var(--accent)', icon: '⚡' },
+    { key: 'Pendente',      label: 'Pendente / Aguardando', cor: 'var(--yellow)', icon: '⏳' },
+    { key: 'Em Andamento',  label: 'Em Andamento',          cor: 'var(--accent)', icon: '🔄' },
+    { key: 'No Prazo',      label: 'No Prazo',              cor: 'var(--green)',  icon: '✅' },
+    { key: 'Atrasado',      label: 'Atrasado',              cor: 'var(--red)',    icon: '🔴' },
+    { key: 'Antecipado',    label: 'Antecipado',            cor: 'var(--accent)', icon: '⚡' },
   ];
 
   const cardDelta = (e) => {
@@ -2946,15 +2963,36 @@ function renderFluxo(p) {
     const respId   = (p.cronoResp && p.cronoResp[chaveCalc]) || '';
     const histData = (p.cronoHist && p.cronoHist[chaveCalc]) || [];
     const respNome = respId ? ((getUsers().find(u=>u.id===respId)||{}).nome||respId).split(' ')[0] : '';
+    const hasPct   = !!linha[6];
+    const pctVal   = hasPct ? ((p.cronoPct && p.cronoPct[chaveCalc] !== undefined) ? p.cronoPct[chaveCalc] : 0) : null;
+    const pctColor = pctVal === 100 ? 'var(--green)' : pctVal >= 50 ? 'var(--accent)' : pctVal > 0 ? 'var(--yellow)' : 'var(--border2)';
+
+    const pctHTML = hasPct ? `
+      <div class="crono-pct-wrap">
+        <input type="number" class="crono-pct-input" id="crono-pct-${i}"
+          value="${pctVal}" min="0" max="100"
+          title="Porcentagem de conclusão desta atividade"
+          onchange="salvarPct(${i}, this.value)"
+          oninput="atualizarBaraPct(${i}, this.value)">
+        <span class="crono-pct-label">%</span>
+        <div class="crono-pct-bar-wrap">
+          <div class="crono-pct-bar" id="crono-pct-bar-${i}"
+            style="width:${pctVal}%;background:${pctColor}"></div>
+        </div>
+        <span id="crono-pct-num-${i}" style="font-size:10px;font-weight:700;color:${pctColor};font-family:'Barlow Condensed',sans-serif;min-width:28px">${pctVal}%</span>
+      </div>` : '';
 
     return `<tr style="${rowStyle}" id="crono-row-${i}">
       <td style="color:var(--text3);font-weight:700;font-family:'Barlow Condensed',sans-serif">${String(i+1).padStart(2,'0')}</td>
       <td style="font-weight:${highlight?700:500};font-size:13px">
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <span style="cursor:pointer" onclick="openActModal(${i})">${icone} ${nome}</span>
-          ${respNome?`<span class="crono-resp-badge" onclick="openActModal(${i})">👤 ${respNome}</span>`:''}
-          ${obsData?`<span class="crono-obs-badge" onclick="openActModal(${i})">💬 obs</span>`:''}
-          ${histData.length?`<span class="crono-obs-badge" onclick="openActModal(${i})" style="color:var(--text3);border-color:rgba(255,255,255,.1)">🕐 ${histData.length}</span>`:''}
+        <div>
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+            <span style="cursor:pointer" onclick="openActModal(${i})">${icone} ${nome}</span>
+            ${respNome?`<span class="crono-resp-badge" onclick="openActModal(${i})">👤 ${respNome}</span>`:''}
+            ${obsData?`<span class="crono-obs-badge" onclick="openActModal(${i})">💬 obs</span>`:''}
+            ${histData.length?`<span class="crono-obs-badge" onclick="openActModal(${i})" style="color:var(--text3);border-color:rgba(255,255,255,.1)">🕐 ${histData.length}</span>`:''}
+          </div>
+          ${pctHTML}
         </div>
       </td>
       <td><span class="crono-formula-badge" style="cursor:pointer" onclick="openActModal(${i})" title="Abrir detalhes">${formula}</span></td>
@@ -2998,13 +3036,13 @@ function renderFluxo(p) {
           <div class="fdash-kpi-val" style="color:var(--green)">${concluidas}</div>
           <div class="fdash-kpi-lbl">Concluídas</div>
         </div>
+        <div class="fdash-kpi early">
+          <div class="fdash-kpi-val" style="color:var(--accent)">${emAndamento}</div>
+          <div class="fdash-kpi-lbl">Em Andamento</div>
+        </div>
         <div class="fdash-kpi late">
           <div class="fdash-kpi-val" style="color:var(--red)">${atrasadas}</div>
           <div class="fdash-kpi-lbl">Atrasadas</div>
-        </div>
-        <div class="fdash-kpi early">
-          <div class="fdash-kpi-val" style="color:var(--accent)">${antecipadas}</div>
-          <div class="fdash-kpi-lbl">Antecipadas</div>
         </div>
         <div class="fdash-kpi pend">
           <div class="fdash-kpi-val" style="color:var(--yellow)">${pendentes}</div>
@@ -3022,10 +3060,16 @@ function renderFluxo(p) {
           <div class="fdash-bar-fill" style="width:${pctGeral}%"></div>
         </div>
         <div class="fdash-bar-segments">
-          ${etapasStatus.map(e => `
-            <div class="fdash-seg" title="${e.nome}: ${e.status}"
-              style="background:${e.isNA ? 'var(--border)' : e.realizado ? (e.delta===0?'var(--green)':e.delta>0?'var(--red)':'var(--accent)') : (e.status==='Atrasado'?'rgba(255,23,68,.35)':'var(--border2)')};
-                     opacity:${e.isNA ? 0.3 : e.previsto ? 1 : .35}"></div>`).join('')}
+          ${etapasStatus.map(e => {
+            const barColor = e.isNA ? 'var(--border)' :
+              e.realizado ? (e.delta===0?'var(--green)':e.delta>0?'var(--red)':'var(--accent)') :
+              e.status==='Em Andamento' ? 'var(--accent)' :
+              e.status==='Atrasado' ? 'rgba(255,23,68,.35)' : 'var(--border2)';
+            const segPct = e.isNA ? 0 : (e.hasPct ? (e.pct||0) : (e.realizado?100:0));
+            return `<div class="fdash-seg" title="${e.nome}: ${e.status}${e.hasPct&&e.pct>0&&e.pct<100?' ('+e.pct+'%)':''}"
+              style="background:linear-gradient(90deg,${barColor} ${segPct}%,var(--border2) ${segPct}%);
+                     opacity:${e.isNA?0.2:e.previsto?1:.35}"></div>`;
+          }).join('')}
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:6px;font-family:'Barlow Condensed',sans-serif">
           <span>${concluidas} de ${total} atividades concluídas${naoAplicaveis>0?` · ${naoAplicaveis} N/A`:''}</span>
@@ -4976,6 +5020,60 @@ function tplDrop(e, i) {
   saveTemplates(tpls);
   tplDragIdx = null;
   renderTplContent();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PORCENTAGEM DE CONCLUSÃO DAS ATIVIDADES DO FLUXO
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Atualiza a barra visual e o label em tempo real enquanto digita
+ */
+function atualizarBaraPct(i, valor) {
+  const pct = Math.min(100, Math.max(0, parseInt(valor) || 0));
+  const bar = document.getElementById(`crono-pct-bar-${i}`);
+  const num = document.getElementById(`crono-pct-num-${i}`);
+  const cor = pct === 100 ? 'var(--green)' : pct >= 50 ? 'var(--accent)' : pct > 0 ? 'var(--yellow)' : 'var(--border2)';
+  if (bar) { bar.style.width = pct + '%'; bar.style.background = cor; }
+  if (num) { num.textContent = pct + '%'; num.style.color = cor; }
+}
+
+/**
+ * Salva a porcentagem no projeto e sincroniza com Supabase
+ * Se 100% → marca realizado com data de hoje automaticamente (se ainda não tiver)
+ */
+async function salvarPct(i, valor) {
+  const p   = getProjeto();
+  if (!p) return;
+  const [chaveCalc, chaveReal] = CRONO_LINHAS[i];
+  const pct = Math.min(100, Math.max(0, parseInt(valor) || 0));
+
+  // Corrige o input para valor validado
+  const inp = document.getElementById(`crono-pct-${i}`);
+  if (inp) inp.value = pct;
+  atualizarBaraPct(i, pct);
+
+  if (!p.cronoPct) p.cronoPct = {};
+  p.cronoPct[chaveCalc] = pct;
+
+  // Se 100% e ainda sem data realizada → sugerir marcar como realizado hoje
+  if (pct === 100 && !(p.cronoRealizado && p.cronoRealizado[chaveReal])) {
+    const hoje = new Date().toISOString().split('T')[0];
+    if (!p.cronoRealizado) p.cronoRealizado = {};
+    p.cronoRealizado[chaveReal] = hoje;
+    // Atualiza o input de data realizada na tabela
+    const realEl = document.getElementById(`crono-real-${i}`);
+    if (realEl) {
+      realEl.value = hoje;
+      const prevInputEl = document.getElementById(`crono-prev-input-${i}`);
+      const deltaEl = document.getElementById(`crono-delta-${i}`);
+      if (deltaEl && prevInputEl) atualizarDelta(deltaEl, prevInputEl.value, hoje);
+    }
+    toast(`✅ 100% — Data de realização preenchida automaticamente: ${fmtDate(hoje)}`, 3000);
+  }
+
+  await saveAsync(projId);
+  atualizarDashboardFluxo(p);
 }
 
 // ─── INIT ───
