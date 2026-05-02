@@ -1205,6 +1205,62 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
 .crono-pct-bar { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
 .crono-pct-label { font-size: 10px; color: var(--text3); font-family: 'Barlow Condensed', sans-serif; white-space: nowrap; }
 
+/* ─── SUBTAREFAS (CHECKLIST) ─── */
+.subtask-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
+.subtask-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 7px; padding: 8px 12px;
+  transition: border-color .15s, opacity .2s;
+}
+.subtask-item:hover { border-color: var(--border2); }
+.subtask-item.done { opacity: .55; }
+.subtask-item.done .subtask-name { text-decoration: line-through; color: var(--text3); }
+.subtask-cb {
+  width: 17px; height: 17px; flex-shrink: 0; cursor: pointer;
+  accent-color: var(--accent); border-radius: 3px;
+}
+.subtask-name {
+  flex: 1; font-size: 13px; color: var(--text); background: none;
+  border: none; outline: none; font-family: 'Barlow', sans-serif;
+  cursor: pointer; padding: 0;
+  transition: color .2s;
+}
+.subtask-name:focus { color: var(--accent); }
+.subtask-prio {
+  font-size: 10px; padding: 2px 6px; border-radius: 4px;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 700;
+  letter-spacing: .5px; cursor: pointer; flex-shrink: 0;
+  border: none; background: var(--card2); color: var(--text3);
+  transition: all .15s;
+}
+.subtask-prio.alta  { background: rgba(255,23,68,.15);   color: var(--red);    }
+.subtask-prio.media { background: rgba(255,214,0,.12);   color: var(--yellow); }
+.subtask-prio.baixa { background: rgba(0,230,118,.1);    color: var(--green);  }
+.subtask-del {
+  background: none; border: none; cursor: pointer; color: var(--text3);
+  font-size: 14px; padding: 2px 4px; border-radius: 4px; opacity: 0;
+  transition: all .15s; flex-shrink: 0;
+}
+.subtask-item:hover .subtask-del { opacity: 1; }
+.subtask-del:hover { color: var(--red); background: rgba(255,23,68,.1); }
+.subtask-add-row {
+  display: flex; gap: 8px; margin-top: 6px;
+}
+.subtask-add-input {
+  flex: 1; background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 7px; padding: 8px 12px; color: var(--text);
+  font-family: 'Barlow', sans-serif; font-size: 13px; outline: none;
+  transition: border-color .2s;
+}
+.subtask-add-input:focus { border-color: var(--accent); }
+.subtask-progress {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  font-size: 11px; color: var(--text2);
+}
+.subtask-progress-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.subtask-progress-fill { height: 100%; border-radius: 3px; background: var(--green); transition: width .3s; }
+
 /* ─── EDITOR DE TEMPLATES ─── */
 .tpl-editor-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.75);
@@ -1376,6 +1432,27 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
       <div class="act-section-title">📝 Observações</div>
       <textarea class="act-obs-area" id="act-obs-text"
         placeholder="Digite observações, instruções, links, ou qualquer informação relevante para esta atividade..."></textarea>
+
+      <div class="act-section-title">☑ Lista de Atividades Internas
+        <span id="act-subtask-progress-label" style="font-size:10px;color:var(--text2);font-weight:400;margin-left:4px"></span>
+      </div>
+      <div id="act-subtask-progress" style="display:none" class="subtask-progress">
+        <div class="subtask-progress-bar"><div class="subtask-progress-fill" id="act-subtask-bar"></div></div>
+        <span id="act-subtask-pct" style="font-weight:700;color:var(--green);font-family:'Barlow Condensed',sans-serif">0%</span>
+      </div>
+      <div class="subtask-list" id="act-subtask-list"></div>
+      <div class="subtask-add-row">
+        <input class="subtask-add-input" type="text" id="act-subtask-nova"
+          placeholder="Nova atividade interna... (Enter para adicionar)"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();adicionarSubtask()}">
+        <select id="act-subtask-prio" style="background:var(--card2);border:1px solid var(--border2);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'Barlow',sans-serif;font-size:12px;outline:none;cursor:pointer">
+          <option value="normal">— Prioridade</option>
+          <option value="alta">🔴 Alta</option>
+          <option value="media">🟡 Média</option>
+          <option value="baixa">🟢 Baixa</option>
+        </select>
+        <button class="btn btn-ghost" onclick="adicionarSubtask()" style="white-space:nowrap;font-size:12px">＋ Adicionar</button>
+      </div>
 
       <div class="act-section-title">🕐 Histórico de Atualizações</div>
       <div id="act-hist-list">
@@ -2981,6 +3058,15 @@ function renderFluxo(p) {
         <span id="crono-pct-num-${i}" style="font-size:10px;font-weight:700;color:${pctColor};font-family:'Barlow Condensed',sans-serif;min-width:28px">${pctVal}%</span>
       </div>` : '';
 
+    const subtasks  = (p.cronoSubtasks && p.cronoSubtasks[chaveCalc]) || [];
+    const stTotal   = subtasks.length;
+    const stDone    = subtasks.filter(s => s.done).length;
+    const stBadge   = stTotal > 0
+      ? `<span class="crono-obs-badge" onclick="openActModal(${i})"
+           style="color:${stDone===stTotal?'var(--green)':'var(--text2)'};border-color:${stDone===stTotal?'rgba(0,230,118,.3)':'rgba(255,255,255,.1)'}">
+           ☑ ${stDone}/${stTotal}</span>`
+      : '';
+
     return `<tr style="${rowStyle}" id="crono-row-${i}">
       <td style="color:var(--text3);font-weight:700;font-family:'Barlow Condensed',sans-serif">${String(i+1).padStart(2,'0')}</td>
       <td style="font-weight:${highlight?700:500};font-size:13px">
@@ -2989,6 +3075,7 @@ function renderFluxo(p) {
             <span style="cursor:pointer" onclick="openActModal(${i})">${icone} ${nome}</span>
             ${respNome?`<span class="crono-resp-badge" onclick="openActModal(${i})">👤 ${respNome}</span>`:''}
             ${obsData?`<span class="crono-obs-badge" onclick="openActModal(${i})">💬 obs</span>`:''}
+            ${stBadge}
             ${histData.length?`<span class="crono-obs-badge" onclick="openActModal(${i})" style="color:var(--text3);border-color:rgba(255,255,255,.1)">🕐 ${histData.length}</span>`:''}
           </div>
           ${pctHTML}
@@ -4488,6 +4575,9 @@ function openActModal(i) {
   // Observações
   document.getElementById('act-obs-text').value = (p.cronoObs && p.cronoObs[chaveCalc]) || '';
 
+  // Subtarefas
+  renderSubtasks(chaveCalc, p);
+
   // Histórico
   renderHistorico(chaveCalc, p);
 
@@ -5083,6 +5173,144 @@ async function salvarPct(i, valor) {
     el.innerHTML = renderFluxo(p);
     bindFluxoEventos(p);
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SUBTAREFAS (CHECKLIST) NAS ATIVIDADES DO FLUXO
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Renderiza a lista de subtarefas no modal da atividade
+ */
+function renderSubtasks(chaveCalc, p) {
+  const subtasks = (p.cronoSubtasks && p.cronoSubtasks[chaveCalc]) || [];
+  const listEl   = document.getElementById('act-subtask-list');
+  const progEl   = document.getElementById('act-subtask-progress');
+  const barEl    = document.getElementById('act-subtask-bar');
+  const pctEl    = document.getElementById('act-subtask-pct');
+  const lblEl    = document.getElementById('act-subtask-progress-label');
+
+  if (!listEl) return;
+
+  // Progresso da checklist
+  const total    = subtasks.length;
+  const concl    = subtasks.filter(s => s.done).length;
+  const pctCheck = total > 0 ? Math.round((concl / total) * 100) : 0;
+  const pctColor = pctCheck === 100 ? 'var(--green)' : pctCheck >= 50 ? 'var(--accent)' : 'var(--yellow)';
+
+  if (total > 0) {
+    progEl.style.display = 'flex';
+    barEl.style.width    = pctCheck + '%';
+    barEl.style.background = pctColor;
+    pctEl.textContent    = pctCheck + '%';
+    pctEl.style.color    = pctColor;
+    lblEl.textContent    = `— ${concl}/${total} concluídas`;
+  } else {
+    progEl.style.display = 'none';
+    lblEl.textContent = '';
+  }
+
+  if (!subtasks.length) {
+    listEl.innerHTML = `<div style="font-size:12px;color:var(--text3);text-align:center;padding:12px;background:var(--card);border:1px dashed var(--border);border-radius:7px">
+      Nenhuma atividade interna. Adicione abaixo.
+    </div>`;
+    return;
+  }
+
+  const prioLabel = { alta: '🔴 Alta', media: '🟡 Média', baixa: '🟢 Baixa', normal: '' };
+  const prioClass = { alta: 'alta', media: 'media', baixa: 'baixa', normal: '' };
+
+  listEl.innerHTML = subtasks.map((s, idx) => `
+    <div class="subtask-item ${s.done ? 'done' : ''}" id="subtask-row-${idx}">
+      <input type="checkbox" class="subtask-cb" ${s.done ? 'checked' : ''}
+        onchange="toggleSubtask(${idx})" title="${s.done ? 'Marcar como pendente' : 'Marcar como concluída'}">
+      <input type="text" class="subtask-name" value="${(s.nome||'').replace(/"/g,'&quot;')}"
+        onchange="editarSubtask(${idx}, 'nome', this.value)"
+        placeholder="Nome da atividade">
+      ${s.prio && s.prio !== 'normal' ? `<span class="subtask-prio ${prioClass[s.prio]}" onclick="ciclaPrio(${idx})" title="Clique para mudar prioridade">${prioLabel[s.prio]}</span>` : ''}
+      ${s.resp ? `<span style="font-size:10px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700">👤 ${s.resp}</span>` : ''}
+      <button class="subtask-del" onclick="removerSubtask(${idx})" title="Remover atividade">✕</button>
+    </div>`).join('');
+}
+
+function adicionarSubtask() {
+  const p = getProjeto();
+  if (!p || actModalIndex === null) return;
+  const [chaveCalc] = CRONO_LINHAS[actModalIndex];
+  const input  = document.getElementById('act-subtask-nova');
+  const prioEl = document.getElementById('act-subtask-prio');
+  const nome   = input.value.trim();
+  if (!nome) { input.focus(); return; }
+
+  if (!p.cronoSubtasks) p.cronoSubtasks = {};
+  if (!p.cronoSubtasks[chaveCalc]) p.cronoSubtasks[chaveCalc] = [];
+
+  p.cronoSubtasks[chaveCalc].push({
+    id:   Date.now().toString(36),
+    nome,
+    done: false,
+    prio: prioEl ? prioEl.value : 'normal',
+    criadoEm: new Date().toISOString(),
+  });
+
+  saveAsync(projId);
+  input.value = '';
+  if (prioEl) prioEl.value = 'normal';
+  renderSubtasks(chaveCalc, p);
+  input.focus();
+}
+
+function toggleSubtask(idx) {
+  const p = getProjeto();
+  if (!p || actModalIndex === null) return;
+  const [chaveCalc] = CRONO_LINHAS[actModalIndex];
+  const subtasks = p.cronoSubtasks && p.cronoSubtasks[chaveCalc];
+  if (!subtasks || !subtasks[idx]) return;
+
+  subtasks[idx].done = !subtasks[idx].done;
+  if (subtasks[idx].done) subtasks[idx].concluidoEm = new Date().toISOString();
+  else delete subtasks[idx].concluidoEm;
+
+  saveAsync(projId);
+  renderSubtasks(chaveCalc, p);
+
+  // Feedback sutil
+  const total = subtasks.length;
+  const concl = subtasks.filter(s => s.done).length;
+  if (concl === total && total > 0) toast(`🎉 Todas as ${total} atividades internas concluídas!`, 2500);
+}
+
+function editarSubtask(idx, campo, valor) {
+  const p = getProjeto();
+  if (!p || actModalIndex === null) return;
+  const [chaveCalc] = CRONO_LINHAS[actModalIndex];
+  const subtasks = p.cronoSubtasks && p.cronoSubtasks[chaveCalc];
+  if (!subtasks || !subtasks[idx]) return;
+  subtasks[idx][campo] = valor;
+  saveAsync(projId);
+}
+
+function removerSubtask(idx) {
+  const p = getProjeto();
+  if (!p || actModalIndex === null) return;
+  const [chaveCalc] = CRONO_LINHAS[actModalIndex];
+  const nome = p.cronoSubtasks[chaveCalc][idx]?.nome || '';
+  if (!confirm(`Remover "${nome}"?`)) return;
+  p.cronoSubtasks[chaveCalc].splice(idx, 1);
+  saveAsync(projId);
+  renderSubtasks(chaveCalc, p);
+}
+
+function ciclaPrio(idx) {
+  const p = getProjeto();
+  if (!p || actModalIndex === null) return;
+  const [chaveCalc] = CRONO_LINHAS[actModalIndex];
+  const subtasks = p.cronoSubtasks && p.cronoSubtasks[chaveCalc];
+  if (!subtasks || !subtasks[idx]) return;
+  const ciclo = { normal: 'alta', alta: 'media', media: 'baixa', baixa: 'normal' };
+  subtasks[idx].prio = ciclo[subtasks[idx].prio || 'normal'];
+  saveAsync(projId);
+  renderSubtasks(chaveCalc, p);
 }
 
 // ─── INIT ───
