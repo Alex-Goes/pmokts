@@ -2906,10 +2906,11 @@ function renderFluxo(p) {
 
   // ── Timeline / barra de progresso por etapa ───────────────────────────────
   const tlRows = etapasStatus.map(e => {
-    const pctBar = e.realizado ? 100 : 0;
+    // Usa % real salvo (parcial ou 100), não binário
+    const pctBar  = e.isNA ? 0 : (e.pct || 0);
     const barColor = e.realizado
       ? (e.delta === 0 ? 'var(--green)' : e.delta > 0 ? 'var(--red)' : 'var(--accent)')
-      : (e.status === 'Atrasado' ? 'rgba(255,23,68,.35)' : 'var(--border2)');
+      : (pctBar > 0 ? 'var(--accent)' : (e.status === 'Atrasado' ? 'rgba(255,23,68,.35)' : 'var(--border2)'));
 
     const deltaText = e.delta !== null && e.realizado
       ? (e.delta === 0 ? `<span style="color:var(--green)">✓</span>`
@@ -2917,8 +2918,6 @@ function renderFluxo(p) {
        :                 `<span style="color:var(--accent)">${e.delta}d</span>`)
       : (e.status === 'Atrasado' ? `<span style="color:var(--red)">▲ atras.</span>`
        : `<span style="color:var(--text3)">—</span>`);
-
-    const statusBadge = `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${e.bg};color:${e.cor};font-family:'Barlow Condensed',sans-serif">${e.status}</span>`;
 
     return `<div class="fdash-tl-row">
       <div class="fdash-tl-name" style="color:${e.cor};font-size:12px">${e.icone} ${e.nome}</div>
@@ -3181,18 +3180,21 @@ function atualizarDashboardFluxo(p) {
   const hoje     = new Date().toISOString().split('T')[0];
 
   const etapasStatus = CRONO_LINHAS.map((linha, i) => {
-    const [chaveCalc, chaveReal, icone, nome] = linha;
-    if (cronoNAd[chaveCalc]) return { i, icone, nome, status:'N/A', cor:'var(--text3)', bg:'rgba(255,255,255,.03)', previsto:'', realizado:'', delta:null, isNA:true };
+    const [chaveCalc, chaveReal, icone, nome,,, hasPct] = linha;
+    if (cronoNAd[chaveCalc]) return { i, icone, nome, status:'N/A', cor:'var(--text3)', bg:'rgba(255,255,255,.03)', previsto:'', realizado:'', delta:null, isNA:true, pct:0, hasPct:false };
     // Lê do DOM se disponível (reflete edições em andamento), senão do objeto
     const prevInputEl = document.getElementById(`crono-prev-input-${i}`);
     const previsto  = (prevInputEl ? prevInputEl.value : null) || overridesD[chaveCalc] || crono[chaveCalc] || '';
     const realizado = rc[chaveReal] || '';
     const delta     = diffDias(previsto, realizado);
+    const pctSalvo  = hasPct ? ((p.cronoPct && p.cronoPct[chaveCalc] !== undefined) ? p.cronoPct[chaveCalc] : 0) : (realizado ? 100 : 0);
     let status, cor, bg;
     if (realizado) {
       if (delta === 0)    { status = 'No Prazo';   cor = 'var(--green)'; bg = 'rgba(0,230,118,.12)'; }
       else if (delta > 0) { status = 'Atrasado';   cor = 'var(--red)';   bg = 'rgba(255,23,68,.12)'; }
       else                { status = 'Antecipado'; cor = 'var(--accent)';bg = 'rgba(0,212,255,.12)'; }
+    } else if (hasPct && pctSalvo > 0 && pctSalvo < 100) {
+      status = 'Em Andamento'; cor = 'var(--accent)'; bg = 'rgba(0,212,255,.08)';
     } else if (previsto && previsto < hoje) {
       status = 'Atrasado'; cor = 'var(--red)'; bg = 'rgba(255,23,68,.08)';
     } else if (previsto) {
@@ -3200,7 +3202,7 @@ function atualizarDashboardFluxo(p) {
     } else {
       status = 'Sem Data'; cor = 'var(--text3)'; bg = 'rgba(255,255,255,.03)';
     }
-    return { i, icone, nome, previsto, realizado, delta, status, cor, bg, isNA: false };
+    return { i, icone, nome, previsto, realizado, delta, status, cor, bg, isNA: false, pct: pctSalvo, hasPct: !!hasPct };
   });
 
   const total      = etapasStatus.filter(e => !e.isNA).length;
@@ -3208,7 +3210,7 @@ function atualizarDashboardFluxo(p) {
   const atrasadas  = etapasStatus.filter(e => e.status === 'Atrasado').length;
   const antecipadas= etapasStatus.filter(e => e.status === 'Antecipado').length;
   const pendentes  = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
-  const pctGeral   = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+  const pctGeral   = total > 0 ? Math.round(etapasStatus.filter(e=>!e.isNA).reduce((a,e) => a + (e.pct||0), 0) / (total * 100) * 100) : 0;
 
   // Atualiza KPIs
   const kpis = dashEl.querySelectorAll('.fdash-kpi-val');
@@ -3288,10 +3290,10 @@ function atualizarDashboardFluxo(p) {
 
   if (tlRowsEl) {
     tlRowsEl.innerHTML = etapasStatus.map(e => {
-      const pctBar = e.realizado ? 100 : 0;
+      const pctBar  = e.isNA ? 0 : (e.pct || 0);
       const barColor = e.realizado
         ? (e.delta===0?'var(--green)':e.delta>0?'var(--red)':'var(--accent)')
-        : (e.status==='Atrasado'?'rgba(255,23,68,.35)':'var(--border2)');
+        : (pctBar > 0 ? 'var(--accent)' : (e.status==='Atrasado'?'rgba(255,23,68,.35)':'var(--border2)'));
       const dTxt = e.delta !== null && e.realizado
         ? (e.delta===0 ? `<span style="color:var(--green)">✓</span>`
           : e.delta>0  ? `<span style="color:var(--red)">+${e.delta}d</span>`
