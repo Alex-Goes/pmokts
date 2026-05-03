@@ -2413,62 +2413,6 @@ function renderKanban(p) {
 }
 
 // ─── GANTT ───
-function renderGantt(p) {
-  const etapas = p.etapas || [];
-  if (!etapas.length) return emptyEtapas();
-
-  // calcular min/max datas
-  const datas = etapas.filter(e => e.inicio && e.termino).map(e => ({
-    ini: new Date(e.inicio), fim: new Date(e.termino)
-  }));
-
-  const projIni = p.inicio ? new Date(p.inicio) : (datas.length ? new Date(Math.min(...datas.map(d=>d.ini))) : new Date());
-  const projFim = p.termino ? new Date(p.termino) : (datas.length ? new Date(Math.max(...datas.map(d=>d.fim))) : new Date(projIni.getTime() + 30*86400000));
-  const totalDias = Math.max(1, Math.ceil((projFim - projIni) / 86400000));
-
-  return `<div class="gantt-wrap">
-    <table class="gantt-table">
-      <thead><tr>
-        <th style="width:200px">Etapa</th>
-        <th style="width:90px">Início</th>
-        <th style="width:90px">Término</th>
-        <th style="width:70px">Resp.</th>
-        <th style="width:60px">Status</th>
-        <th style="width:50px">%</th>
-        <th class="gantt-bar-cell">Linha do Tempo</th>
-      </tr></thead>
-      <tbody>${etapas.map((e,i) => {
-        let barLeft = 0, barWidth = 0;
-        if (e.inicio && e.termino) {
-          const ei = new Date(e.inicio), ef = new Date(e.termino);
-          barLeft = Math.max(0, Math.round((ei - projIni) / 86400000 / totalDias * 100));
-          barWidth = Math.max(2, Math.round((ef - ei) / 86400000 / totalDias * 100));
-          if (barLeft + barWidth > 100) barWidth = 100 - barLeft;
-        }
-        const color = STATUS_COLOR[e.status] || 'var(--accent2)';
-        return `<tr>
-          <td style="font-weight:600;font-size:12px">${String(i+1).padStart(2,'0')}. ${e.nome}</td>
-          <td style="color:var(--text2);font-size:11px">${fmt(e.inicio)}</td>
-          <td style="color:var(--text2);font-size:11px">${fmt(e.termino)}</td>
-          <td style="color:var(--text2);font-size:11px">${e.resp?e.resp.split(' ')[0]:'—'}</td>
-          <td><span class="etapa-badge ${STATUS_CLASS[e.status]||'badge-pendente'}" style="font-size:9px">${e.status}</span></td>
-          <td style="font-weight:700;color:${color};font-size:12px">${e.pct||0}%</td>
-          <td class="gantt-bar-cell">
-            <div style="position:relative;height:18px;background:var(--border);border-radius:9px;overflow:hidden">
-              ${barWidth>0?`<div style="position:absolute;left:${barLeft}%;width:${barWidth}%;height:100%;background:linear-gradient(90deg,${color}88,${color});border-radius:9px;display:flex;align-items:center;padding-left:4px"><span style="font-size:9px;font-weight:700;color:#fff;white-space:nowrap">${e.pct||0}%</span></div>`:''}
-            </div>
-          </td>
-        </tr>`;
-      }).join('')}
-      </tbody>
-    </table>
-  </div>
-  <div style="padding:12px 0;display:flex;justify-content:flex-end">
-    <button class="btn btn-success" onclick="salvarAlteracoes()" style="font-size:12px">💾 Salvar Alterações</button>
-  </div>`;
-}
-
-// ─── RELATÓRIO ───
 function renderRelatorio(p) {
   const etapas = p.etapas || [];
   const pct = calcPct(p);
@@ -5467,6 +5411,13 @@ function ciclaPrio(idx) {
 // ═══════════════════════════════════════════════════════════════════
 
 function renderGantt(etapasStatus, p) {
+  // Guard: garante que etapasStatus é um array válido
+  if (!Array.isArray(etapasStatus) || !etapasStatus.length) {
+    return `<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">
+      📅 Preencha as datas previstas no cronograma para visualizar o Gantt
+    </div>`;
+  }
+
   const hoje = new Date().toISOString().split('T')[0];
 
   // Coleta todas as datas para definir o intervalo do eixo X
@@ -5504,22 +5455,6 @@ function renderGantt(etapasStatus, p) {
 
   // Cabeçalho de datas
   const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  let mesAtual = '', mesHeaderHTML = '', diasHeaderHTML = '';
-  
-  // Agrupa dias por mês para o cabeçalho superior
-  const mesGroups = [];
-  let curMes = null, curCount = 0;
-  dias.forEach(d => {
-    const dt = new Date(d + 'T00:00:00');
-    const mesKey = `${dt.getFullYear()}-${dt.getMonth()}`;
-    if (mesKey !== curMes) {
-      if (curMes !== null) mesGroups.push({ label: '', count: curCount });
-      curMes = mesKey;
-      curCount = 1;
-      const mesAnterior = new Date(d + 'T00:00:00');
-      mesGroups.push = null; // trick to delay
-    } else { curCount++; }
-  });
 
   const headerDias = dias.map(d => {
     const dt = new Date(d + 'T00:00:00');
