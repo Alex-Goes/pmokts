@@ -2991,10 +2991,20 @@ const CRONO_LINHAS = [
 function renderFluxo(p) {
   const rc      = p.cronoRealizado || {};
   // Sempre recalcula o crono para garantir que usa as fórmulas mais recentes
-  // (evita usar datas salvas com fórmulas antigas)
-  const crono   = calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, p.inicioManual||null);
-  // Atualiza o crono salvo no projeto silenciosamente
-  if (p.aprovacao || p.tap) { p.crono = crono; }
+  // Se o projeto tem p.inicio salvo E ele difere do cálculo automático (Aprovação+20d),
+  // usa p.inicio como início manual — assim preserva datas definidas pelo usuário
+  const _inicioAuto = (() => {
+    if (!p.aprovacao) return '';
+    const da = new Date(p.aprovacao + 'T00:00:00'); da.setDate(da.getDate()+20);
+    return da.toISOString().split('T')[0];
+  })();
+  const _inicioManual = p.inicioManual || (p.inicio && p.inicio !== _inicioAuto ? p.inicio : null);
+  const crono   = calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, _inicioManual);
+  // Atualiza o crono e a flag inicioManual no projeto
+  if (p.aprovacao || p.tap) {
+    p.crono = crono;
+    if (_inicioManual && !p.inicioManual) p.inicioManual = _inicioManual;
+  }
   const overrides = p.cronoOverride || {};
   const hoje    = new Date().toISOString().split('T')[0];
 
@@ -3358,8 +3368,17 @@ function atualizarDashboardFluxo(p) {
   if (!dashEl) return;
 
   const rc       = p.cronoRealizado || {};
-  const crono    = calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, p.inicioManual||null);
-  if (p.aprovacao || p.tap) { p.crono = crono; }
+  const _inicioAutoD = (() => {
+    if (!p.aprovacao) return '';
+    const da = new Date(p.aprovacao + 'T00:00:00'); da.setDate(da.getDate()+20);
+    return da.toISOString().split('T')[0];
+  })();
+  const _inicioManualD = p.inicioManual || (p.inicio && p.inicio !== _inicioAutoD ? p.inicio : null);
+  const crono    = calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, _inicioManualD);
+  if (p.aprovacao || p.tap) {
+    p.crono = crono;
+    if (_inicioManualD && !p.inicioManual) p.inicioManual = _inicioManualD;
+  }
   const overridesD = p.cronoOverride || {};
   const cronoNAd = p.cronoNA || {};
   const hoje     = new Date().toISOString().split('T')[0];
@@ -3506,8 +3525,13 @@ function bindFluxoEventos(p) {
     const mudou = apr !== valorAntes.apr || tap !== valorAntes.tap || String(dias) !== valorAntes.dias;
     valorAntes = { apr, tap, dias: String(dias) };
 
-    // Respeita início manual salvo no projeto (se existir)
-    const inicioManual = p.inicioManual || null;
+    // Respeita início manual: usa p.inicioManual OU detecta que p.inicio difere do auto
+    const _autoInicio = (() => {
+      if (!apr) return '';
+      const da = new Date(apr + 'T00:00:00'); da.setDate(da.getDate()+20);
+      return da.toISOString().split('T')[0];
+    })();
+    const inicioManual = p.inicioManual || (p.inicio && p.inicio !== _autoInicio ? p.inicio : null);
     const crono = calcularCronograma(apr, tap, dias, inicioManual);
 
     p.aprovacao = apr;
