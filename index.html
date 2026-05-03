@@ -2471,7 +2471,11 @@ function editarProjeto() {
   document.getElementById('f-nome').value = p.nome||'';
   document.getElementById('f-cliente').value = p.cliente||'';
   document.getElementById('f-local').value = p.local||'';
-  document.getElementById('f-aprovacao').value = p.aprovacao||'';
+  // Preenche aprovacao sem disparar onchange (para não sobrescrever datas salvas)
+  const aprovEl = document.getElementById('f-aprovacao');
+  aprovEl.removeEventListener('change', calcularDatasModal);
+  aprovEl.value = p.aprovacao||'';
+  setTimeout(() => aprovEl.addEventListener('change', calcularDatasModal), 100);
   document.getElementById('f-tap').value = p.tap||'';
   document.getElementById('f-inicio').value = p.inicio||'';
   document.getElementById('f-termino').value = p.termino||'';
@@ -2501,17 +2505,27 @@ async function salvarProjeto() {
   // Detecta se o início foi editado manualmente (badge "✏ editado" visível)
   const inicioBadge  = document.getElementById('f-inicio-badge');
   const inicioInput  = document.getElementById('f-inicio').value;
+  const terminoInput = document.getElementById('f-termino').value;
   const inicioManual = (inicioBadge && inicioBadge.style.display !== 'none' && inicioInput) ? inicioInput : null;
 
-  // Calcula cronograma: manual usa o início definido, automático usa aprovação+20d
+  // Calcula cronograma base
   const crono = calcularCronograma(aprovacao, tap, parseInt(dias)||0, inicioManual);
 
-  // O início e término finais: prioriza o campo do modal (pode ter sido editado)
+  // Início e término: usa o que está no modal (pode ter sido editado manualmente)
   const inicioFinal  = inicioInput  || crono.inicioProj  || '';
-  const terminoFinal = document.getElementById('f-termino').value || crono.terminoProj || '';
+  const terminoFinal = terminoInput || crono.terminoProj || '';
+
+  // Se o início/término foram editados manualmente no modal, reflete no crono
+  if (inicioInput  && inicioInput  !== crono.inicioProj)  crono.inicioProj  = inicioInput;
+  if (terminoInput && terminoInput !== crono.terminoProj) crono.terminoProj = terminoInput;
 
   if (editId) {
     const p = db.projetos.find(x => x.id === editId);
+    // Detecta se aprovação/TAP/dias mudaram — só então recalcula e limpa overrides
+    const aprovacaoMudou = aprovacao !== p.aprovacao || tap !== p.tap || dias !== p.dias;
+    // Preserva cronoOverride existente se não houve mudança nos inputs base
+    const novosCronoOverride = aprovacaoMudou ? {} : (p.cronoOverride || {});
+
     Object.assign(p, {
       proposta: document.getElementById('f-proposta').value,
       nome, cliente: document.getElementById('f-cliente').value,
@@ -2525,6 +2539,7 @@ async function salvarProjeto() {
       escopo: document.getElementById('f-escopo').value,
       status: document.getElementById('f-status').value,
       crono,
+      cronoOverride: novosCronoOverride,
     });
     await saveAsync(editId);
   } else {
@@ -2554,7 +2569,7 @@ async function salvarProjeto() {
   closeModal('modal-projeto');
   renderSidebar();
   openProjeto(projId);
-  toast('✅ Projeto salvo — sincronizado na nuvem!');
+  toast('✅ Projeto salvo!');
 }
 
 async function excluirProjeto() {
