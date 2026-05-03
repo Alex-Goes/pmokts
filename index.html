@@ -3499,11 +3499,18 @@ function bindFluxoEventos(p) {
 
   if (!aprovEl || !tapEl || !diasEl) return;
 
-  // Função central: lê os 3 inputs, recalcula, atualiza SOMENTE as células de resultado
+  // Guarda os valores de referência quando o usuário COMEÇA a editar
+  let valorAntes = { apr: aprovEl.value, tap: tapEl.value, dias: diasEl.value };
+
+  // Função central: só recalcula se o usuário MUDOU um dos campos-base
   const recalcularAoVivo = () => {
     const apr  = aprovEl.value;
     const tap  = tapEl.value;
     const dias = parseInt(diasEl.value) || 0;
+
+    // Detecta se houve mudança real (evita disparar ao apenas renderizar a aba)
+    const mudou = apr !== valorAntes.apr || tap !== valorAntes.tap || String(dias) !== valorAntes.dias;
+    valorAntes = { apr, tap, dias: String(dias) };
 
     // Respeita início manual salvo no projeto (se existir)
     const inicioManual = p.inicioManual || null;
@@ -3513,14 +3520,11 @@ function bindFluxoEventos(p) {
     p.tap       = tap;
     p.dias      = diasEl.value;
     p.crono     = crono;
-    // Preserva inicio/termino do projeto se:
-    // 1. O projeto tem início manual definido (flag inicioManual), OU
-    // 2. O início salvo no projeto difere do calculado (usuário editou antes)
-    const inicioSalvo  = p.inicio  || '';
-    const terminoSalvo = p.termino || '';
-    if (p.inicioManual) {
-      // Mantém o que foi salvo manualmente — não sobrescreve
-    } else {
+
+    // Só sobrescreve p.inicio/p.termino se:
+    // 1. Não há início manual E
+    // 2. O usuário REALMENTE mudou aprovação/TAP/dias agora
+    if (!p.inicioManual && mudou) {
       if (crono.inicioProj)  p.inicio  = crono.inicioProj;
       if (crono.terminoProj) p.termino = crono.terminoProj;
     }
@@ -3545,7 +3549,7 @@ function bindFluxoEventos(p) {
       if (deltaEl && realEl) atualizarDelta(deltaEl, prevInputEl.value, realEl.value);
     });
 
-    // Atualiza header do projeto
+    // Atualiza header do projeto — sempre usa o valor salvo em p (não o recalculado)
     document.getElementById('ph-inicio').textContent  = fmt(p.inicio);
     document.getElementById('ph-termino').textContent = fmt(p.termino);
 
