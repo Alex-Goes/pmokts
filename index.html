@@ -2938,7 +2938,6 @@ function calcularCronograma(aprovacao, tap, diasVendidos, inicioManual) {
   const d = {};
 
   // ETAPAS DERIVADAS DO TAP
-  d.grupoTelegramPrev  = addDias(tap, 1);        // TAP + 1
   d.cronogramaPrev     = addDias(tap, 2);        // TAP + 2
   d.listaComprasPrev   = addDias(tap, 3);        // TAP + 3
 
@@ -2958,6 +2957,9 @@ function calcularCronograma(aprovacao, tap, diasVendidos, inicioManual) {
     d.inicioProj         = addDias(aprovacao, 20); // APROV + 20
   }
 
+  // Grupo AS Built = sempre 2 dias ÚTEIS antes do início (independente do modo)
+  d.grupoTelegramPrev  = addDiasUteis(d.inicioProj, -2); // Início - 2 dias úteis
+
   d.terminoProj        = addDiasUteis(d.inicioProj, diasVendidos); // Início + Dias Úteis
 
   // ETAPAS PÓS-ENTREGA
@@ -2972,7 +2974,7 @@ function calcularCronograma(aprovacao, tap, diasVendidos, inicioManual) {
 // ─── DEFINIÇÃO DAS LINHAS DO CRONOGRAMA ───
 // Cada item: [chaveCalculo, chaveRealizado, ícone, nome, formula, highlight]
 const CRONO_LINHAS = [
-  ['grupoTelegramPrev',    'grupoTelegram',    '📲', 'Criação do Grupo AS Built (Telegram)', 'TAP + 1 dia',           false, false],
+  ['grupoTelegramPrev',    'grupoTelegram',    '📲', 'Criação do Grupo AS Built (Telegram)', 'Início - 2 dias úteis', false, false],
   ['cronogramaPrev',       'cronograma',       '📅', 'Envio do Cronograma',                  'TAP + 2 dias',          false, false],
   ['listaComprasPrev',     'listaCompras',     '🛒', 'Envio da Lista para Compras',          'TAP + 3 dias',          false, true ],
   ['elaboracaoProjPrev',   'elaboracaoProj',   '📐', 'Elaboração de Projetos',               'Aprovação + 16 dias',   false, true ],
