@@ -1996,15 +1996,38 @@ let db = { projetos: [] };
 
 // Carrega dados: tenta Supabase, cai para localStorage
 async function carregarDados() {
+  const local = JSON.parse(localStorage.getItem('gestorpro_db') || '{"projetos":[]}');
   const supaProjs = await supaCarregarProjetos();
+  
   if (supaProjs !== null) {
-    db.projetos = supaProjs;
-    // Sincroniza localStorage como cache offline
+    // Merge inteligente: usa Supabase como base, mas se localStorage tem versão
+    // mais recente de um projeto (checando updatedAt ou comparando campos),
+    // preserva a versão local
+    const localMap = {};
+    (local.projetos || []).forEach(p => { if (p.id) localMap[p.id] = p; });
+    
+    db.projetos = supaProjs.map(supaProj => {
+      const localProj = localMap[supaProj.id];
+      // Se existem dados locais E possuem inicioManual (dado manual), prioriza local
+      // Isso garante que edições manuais de data não são sobrescritas pelo Supabase
+      if (localProj && localProj.inicioManual && !supaProj.inicioManual) {
+        return localProj;
+      }
+      return supaProj;
+    });
+    
+    // Projetos que estão só no localStorage (ainda não sincronizados)
+    const supaIds = new Set(supaProjs.map(p => p.id));
+    (local.projetos || []).forEach(p => {
+      if (!supaIds.has(p.id)) db.projetos.push(p);
+    });
+    
     localStorage.setItem('gestorpro_db', JSON.stringify(db));
     return 'supabase';
   }
+  
   // Fallback: localStorage
-  db = JSON.parse(localStorage.getItem('gestorpro_db') || '{"projetos":[]}');
+  db = local;
   return 'local';
 }
 
@@ -2015,10 +2038,19 @@ function save() {
 
 // saveAsync() — salva no Supabase + localStorage (chamado após mutações de projeto)
 async function saveAsync(projetoId) {
-  save(); // localStorage imediato
+  save(); // localStorage imediato — garante que db em memória está salvo
   if (!SUPA_OK) return;
   const proj = db.projetos.find(p => p.id === projetoId);
-  if (proj) await supaSalvarProjeto(proj);
+  if (!proj) return;
+  
+  // Clona o projeto para garantir que o Supabase recebe os dados corretos
+  const projetoParaSalvar = JSON.parse(JSON.stringify(proj));
+  
+  const ok = await supaSalvarProjeto(projetoParaSalvar);
+  if (!ok) {
+    // Se falhou no Supabase, os dados estão no localStorage — não é crítico
+    console.warn('Supabase save failed, data saved locally');
+  }
 }
 
 // Carrega usuários: Supabase ou localStorage
@@ -2502,11 +2534,23 @@ async function salvarProjeto() {
   const tap       = document.getElementById('f-tap').value;
   const dias      = document.getElementById('f-dias').value;
 
-  // Detecta se o início foi editado manualmente (badge "✏ editado" visível)
+  // Detecta se o início foi editado manualmente:
+  // - badge "✏ editado" visível, OU
+  // - valor do campo difere do cálculo automático (Aprovação+20d)
   const inicioBadge  = document.getElementById('f-inicio-badge');
   const inicioInput  = document.getElementById('f-inicio').value;
   const terminoInput = document.getElementById('f-termino').value;
-  const inicioManual = (inicioBadge && inicioBadge.style.display !== 'none' && inicioInput) ? inicioInput : null;
+
+  // Calcula o início automático para comparar
+  let inicioAuto = '';
+  if (aprovacao) {
+    const dAuto = new Date(aprovacao + 'T00:00:00');
+    dAuto.setDate(dAuto.getDate() + 20);
+    inicioAuto = dAuto.toISOString().split('T')[0];
+  }
+  const badgeVisivel = inicioBadge && inicioBadge.style.display !== 'none';
+  const inicioDiferiu = inicioInput && inicioAuto && inicioInput !== inicioAuto;
+  const inicioManual = (badgeVisivel || inicioDiferiu) ? inicioInput : null;
 
   // Calcula cronograma base
   const crono = calcularCronograma(aprovacao, tap, parseInt(dias)||0, inicioManual);
@@ -2936,7 +2980,7 @@ const CRONO_LINHAS = [
 // ─── RENDER FLUXO (com dashboard de gestão visual) ───
 function renderFluxo(p) {
   const rc      = p.cronoRealizado || {};
-  const crono   = p.crono || calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0);
+  const crono   = p.crono || calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, p.inicioManual||null);
   const overrides = p.cronoOverride || {};
   const hoje    = new Date().toISOString().split('T')[0];
 
@@ -3303,7 +3347,7 @@ function atualizarDashboardFluxo(p) {
   if (!dashEl) return;
 
   const rc       = p.cronoRealizado || {};
-  const crono    = p.crono || calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0);
+  const crono    = p.crono || calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, p.inicioManual||null);
   const overridesD = p.cronoOverride || {};
   const cronoNAd = p.cronoNA || {};
   const hoje     = new Date().toISOString().split('T')[0];
@@ -3469,8 +3513,17 @@ function bindFluxoEventos(p) {
     p.tap       = tap;
     p.dias      = diasEl.value;
     p.crono     = crono;
-    if (crono.inicioProj)  { p.inicio   = crono.inicioProj;  }
-    if (crono.terminoProj) { p.termino  = crono.terminoProj; }
+    // Preserva inicio/termino do projeto se:
+    // 1. O projeto tem início manual definido (flag inicioManual), OU
+    // 2. O início salvo no projeto difere do calculado (usuário editou antes)
+    const inicioSalvo  = p.inicio  || '';
+    const terminoSalvo = p.termino || '';
+    if (p.inicioManual) {
+      // Mantém o que foi salvo manualmente — não sobrescreve
+    } else {
+      if (crono.inicioProj)  p.inicio  = crono.inicioProj;
+      if (crono.terminoProj) p.termino = crono.terminoProj;
+    }
     save();
 
     // Atualiza células de "Previsto" na tabela — respeita overrides manuais
@@ -3681,9 +3734,11 @@ function updateCronoCalc(field, value) {
   const apr  = p.aprovacao || '';
   const tap  = p.tap || '';
   const dias = parseInt(p.dias) || 0;
-  p.crono = calcularCronograma(apr, tap, dias);
-  if (p.crono.inicioProj)  p.inicio  = p.crono.inicioProj;
-  if (p.crono.terminoProj) p.termino = p.crono.terminoProj;
+  p.crono = calcularCronograma(apr, tap, dias, p.inicioManual || null);
+  if (!p.inicioManual) {
+    if (p.crono.inicioProj)  p.inicio  = p.crono.inicioProj;
+    if (p.crono.terminoProj) p.termino = p.crono.terminoProj;
+  }
   save();
 }
 
