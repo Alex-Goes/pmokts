@@ -1205,6 +1205,70 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
 .crono-pct-bar { height: 100%; border-radius: 3px; transition: width .3s, background .3s; }
 .crono-pct-label { font-size: 10px; color: var(--text3); font-family: 'Barlow Condensed', sans-serif; white-space: nowrap; }
 
+/* ─── GANTT ─── */
+.gantt-wrap { overflow-x: auto; border-radius: 10px; background: var(--card); border: 1px solid var(--border); }
+.gantt-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+.gantt-table th {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px; color: var(--text3);
+  padding: 7px 10px; background: var(--bg); border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.gantt-table td {
+  padding: 5px 10px; border-bottom: 1px solid rgba(37,45,64,.5);
+  vertical-align: middle;
+}
+.gantt-table tr:last-child td { border-bottom: none; }
+.gantt-table tr:hover td { background: rgba(255,255,255,.02); }
+.gantt-name-cell {
+  font-size: 12px; font-weight: 500; white-space: nowrap;
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+}
+.gantt-date-cell { font-size: 11px; color: var(--text2); white-space: nowrap; min-width: 82px; }
+.gantt-bar-cell { position: relative; min-width: 340px; padding: 5px 0 5px 0 !important; }
+.gantt-bar-bg {
+  position: relative; height: 22px;
+  background: repeating-linear-gradient(90deg, transparent, transparent calc(var(--gantt-day-w) - 1px), rgba(255,255,255,.04) calc(var(--gantt-day-w) - 1px), rgba(255,255,255,.04) var(--gantt-day-w));
+  border-radius: 4px; overflow: visible;
+}
+.gantt-bar {
+  position: absolute; height: 100%; top: 0;
+  border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #fff; white-space: nowrap;
+  overflow: hidden; transition: opacity .2s; min-width: 4px;
+  font-family: 'Barlow Condensed', sans-serif; letter-spacing: .5px;
+}
+.gantt-bar:hover { opacity: .85; cursor: pointer; }
+.gantt-bar-real {
+  position: absolute; height: 6px; bottom: -1px; top: auto;
+  border-radius: 3px; opacity: .7;
+}
+.gantt-today-line {
+  position: absolute; top: -4px; bottom: -4px; width: 2px;
+  background: var(--red); z-index: 10; pointer-events: none;
+}
+.gantt-today-line::before {
+  content: 'Hoje'; position: absolute; top: -14px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px; font-weight: 700; color: var(--red);
+  font-family: 'Barlow Condensed', sans-serif; white-space: nowrap;
+}
+.gantt-header-dates {
+  display: flex; border-bottom: 1px solid var(--border);
+  background: var(--bg); padding: 4px 0; overflow: hidden;
+}
+.gantt-header-day {
+  flex-shrink: 0; text-align: center;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px;
+  color: var(--text3); font-weight: 600; border-right: 1px solid var(--border);
+  padding: 2px 0; line-height: 1.2;
+}
+.gantt-header-day.weekend { background: rgba(255,255,255,.03); color: rgba(255,255,255,.2); }
+.gantt-header-day.today-col { background: rgba(255,23,68,.1); color: var(--red); font-weight: 900; }
+.gantt-status-dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; flex-shrink: 0;
+}
+
 /* ─── SUBTAREFAS (CHECKLIST) ─── */
 .subtask-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
 .subtask-item {
@@ -3255,13 +3319,10 @@ function renderFluxo(p) {
         <div class="fdash-kanban">${kanbanHTML}</div>
       </div>
 
-      <!-- Timeline / linha do tempo por etapa -->
+      <!-- GANTT -->
       <div class="fdash-timeline">
-        <div class="fdash-tl-title">📈 Linha do Tempo — Previsto vs Realizado</div>
-        <div class="fdash-tl-header">
-          <span>Atividade</span><span>Execução</span><span>Desvio</span><span>Previsto</span><span>Realizado</span>
-        </div>
-        <div class="fdash-tl-rows">${tlRows}</div>
+        <div class="fdash-tl-title">📊 Gantt — Previsto vs Realizado</div>
+        ${renderGantt(etapasStatus, p)}
       </div>
 
     </div>
@@ -3462,29 +3523,11 @@ function atualizarDashboardFluxo(p) {
   }
 
   if (tlRowsEl) {
-    tlRowsEl.innerHTML = etapasStatus.map(e => {
-      const pctBar  = e.isNA ? 0 : (e.pct || 0);
-      const barColor = e.realizado
-        ? (e.delta===0?'var(--green)':e.delta>0?'var(--red)':'var(--accent)')
-        : (pctBar > 0 ? 'var(--accent)' : (e.status==='Atrasado'?'rgba(255,23,68,.35)':'var(--border2)'));
-      const dTxt = e.delta !== null && e.realizado
-        ? (e.delta===0 ? `<span style="color:var(--green)">✓</span>`
-          : e.delta>0  ? `<span style="color:var(--red)">+${e.delta}d</span>`
-          :              `<span style="color:var(--accent)">${e.delta}d</span>`)
-        : (e.status==='Atrasado' ? `<span style="color:var(--red)">▲ atras.</span>`
-          : `<span style="color:var(--text3)">—</span>`);
-      return `<div class="fdash-tl-row">
-        <div class="fdash-tl-name" style="color:${e.cor}">${e.icone} ${e.nome}</div>
-        <div class="fdash-tl-bar-track">
-          <div class="fdash-tl-bar-fill" style="width:${pctBar}%;background:${barColor}">
-            ${pctBar>0?`<span>${pctBar}%</span>`:''}
-          </div>
-        </div>
-        <div style="text-align:center">${dTxt}</div>
-        <div style="font-size:11px;color:var(--text2);white-space:nowrap">${e.previsto?fmtDate(e.previsto):'—'}</div>
-        <div style="font-size:11px;color:var(--text2);white-space:nowrap">${e.realizado?fmtDate(e.realizado):'<span style="color:var(--text3)">Não realizado</span>'}</div>
-      </div>`;
-    }).join('');
+    // Re-renderiza o Gantt completo
+    const ganttWrap = dashEl.querySelector('.fdash-timeline');
+    if (ganttWrap) {
+      ganttWrap.innerHTML = `<div class="fdash-tl-title">📊 Gantt — Previsto vs Realizado</div>${renderGantt(etapasStatus, p)}`;
+    }
   }
 }
 
@@ -5417,6 +5460,195 @@ function ciclaPrio(idx) {
   subtasks[idx].prio = ciclo[subtasks[idx].prio || 'normal'];
   saveAsync(projId);
   renderSubtasks(chaveCalc, p);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GANTT — renderiza gráfico de barras temporal
+// ═══════════════════════════════════════════════════════════════════
+
+function renderGantt(etapasStatus, p) {
+  const hoje = new Date().toISOString().split('T')[0];
+
+  // Coleta todas as datas para definir o intervalo do eixo X
+  const todasDatas = [];
+  etapasStatus.forEach(e => {
+    if (e.previsto)  todasDatas.push(e.previsto);
+    if (e.realizado) todasDatas.push(e.realizado);
+  });
+  if (!todasDatas.length) return `<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">Preencha as datas previstas para visualizar o Gantt</div>`;
+
+  todasDatas.push(hoje);
+  const dMin = todasDatas.reduce((a,b) => a < b ? a : b);
+  const dMax = todasDatas.reduce((a,b) => a > b ? a : b);
+
+  // Expande o intervalo: 2 dias antes e 5 dias depois
+  const dtMin = new Date(dMin + 'T00:00:00'); dtMin.setDate(dtMin.getDate() - 2);
+  const dtMax = new Date(dMax + 'T00:00:00'); dtMax.setDate(dtMax.getDate() + 5);
+
+  // Gera array de dias para o cabeçalho
+  const dias = [];
+  const cur = new Date(dtMin);
+  while (cur <= dtMax) {
+    dias.push(cur.toISOString().split('T')[0]);
+    cur.setDate(cur.getDate() + 1);
+  }
+  const totalDias = dias.length;
+  const DAY_W = Math.max(18, Math.min(32, Math.floor(900 / totalDias))); // px por dia
+
+  // Helper: posição e largura de uma barra em %
+  const dayPos = (dataStr) => {
+    if (!dataStr) return 0;
+    const diff = Math.round((new Date(dataStr + 'T00:00:00') - dtMin) / 86400000);
+    return diff * DAY_W;
+  };
+
+  // Cabeçalho de datas
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  let mesAtual = '', mesHeaderHTML = '', diasHeaderHTML = '';
+  
+  // Agrupa dias por mês para o cabeçalho superior
+  const mesGroups = [];
+  let curMes = null, curCount = 0;
+  dias.forEach(d => {
+    const dt = new Date(d + 'T00:00:00');
+    const mesKey = `${dt.getFullYear()}-${dt.getMonth()}`;
+    if (mesKey !== curMes) {
+      if (curMes !== null) mesGroups.push({ label: '', count: curCount });
+      curMes = mesKey;
+      curCount = 1;
+      const mesAnterior = new Date(d + 'T00:00:00');
+      mesGroups.push = null; // trick to delay
+    } else { curCount++; }
+  });
+
+  const headerDias = dias.map(d => {
+    const dt = new Date(d + 'T00:00:00');
+    const dow = dt.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const isToday = d === hoje;
+    const cls = isToday ? 'today-col' : isWeekend ? 'weekend' : '';
+    const diaN = dt.getDate();
+    const showMes = diaN === 1 || d === dias[0];
+    return `<div class="gantt-header-day ${cls}" style="width:${DAY_W}px;min-width:${DAY_W}px">
+      ${showMes ? `<div style="font-size:8px;color:var(--accent)">${meses[dt.getMonth()]}</div>` : ''}
+      <div>${diaN}</div>
+    </div>`;
+  }).join('');
+
+  // Linha "hoje"
+  const hojePos = dayPos(hoje);
+  const todayLine = `<div class="gantt-today-line" style="left:${hojePos}px"></div>`;
+
+  // Linhas de grade vertical (finais de semana)
+  const gridLines = dias.map((d, i) => {
+    const dt = new Date(d + 'T00:00:00');
+    const dow = dt.getDay();
+    if (dow === 0 || dow === 6) {
+      return `<div style="position:absolute;top:0;bottom:0;left:${i*DAY_W}px;width:${DAY_W}px;background:rgba(255,255,255,.02);pointer-events:none"></div>`;
+    }
+    return '';
+  }).join('');
+
+  // Barras do Gantt por atividade
+  const linhas = etapasStatus.map(e => {
+    if (e.isNA) {
+      return `<tr>
+        <td class="gantt-name-cell" style="color:var(--text3)">
+          <span class="gantt-status-dot" style="background:var(--border)"></span>${e.icone} ${e.nome}
+        </td>
+        <td class="gantt-date-cell" style="color:var(--text3)">N/A</td>
+        <td class="gantt-date-cell"></td>
+        <td class="gantt-bar-cell" style="min-width:${totalDias*DAY_W}px">
+          <div class="gantt-bar-bg" style="width:${totalDias*DAY_W}px;--gantt-day-w:${DAY_W}px">
+            ${todayLine}${gridLines}
+          </div>
+        </td>
+      </tr>`;
+    }
+
+    const statusCor = e.cor;
+    const dotColor = e.realizado
+      ? (e.delta === 0 ? 'var(--green)' : e.delta > 0 ? 'var(--red)' : 'var(--accent)')
+      : (e.status === 'Em Andamento' ? 'var(--accent)'
+       : e.status === 'Atrasado' ? 'var(--red)'
+       : e.status === 'Pendente' ? 'var(--yellow)' : 'var(--text3)');
+
+    // Barra PREVISTA
+    let baraPrevHTML = '';
+    if (e.previsto) {
+      const left = dayPos(e.previsto);
+      // Fim previsto = próxima atividade ou +1 dia se não há duração
+      const barW = DAY_W; // mínimo 1 dia de largura
+      const barColor = e.realizado
+        ? (e.delta > 0 ? 'rgba(255,23,68,.5)' : 'rgba(0,230,118,.4)')
+        : (e.status === 'Atrasado' ? 'rgba(255,23,68,.4)' : 'rgba(0,212,255,.35)');
+      baraPrevHTML = `<div class="gantt-bar" style="left:${left}px;width:${barW}px;background:${barColor};opacity:.8" title="Previsto: ${fmtDate(e.previsto)}">${''}</div>`;
+    }
+
+    // Barra REALIZADA
+    let baraRealHTML = '';
+    if (e.realizado) {
+      const left = dayPos(e.realizado);
+      const barColor = e.delta === 0 ? 'var(--green)' : e.delta > 0 ? 'var(--red)' : 'var(--accent)';
+      baraRealHTML = `<div class="gantt-bar" style="left:${left}px;width:${DAY_W+2}px;background:${barColor};z-index:2;box-shadow:0 0 6px ${barColor}40" title="Realizado: ${fmtDate(e.realizado)} | Desvio: ${e.delta > 0 ? '+' : ''}${e.delta ?? 0}d">
+        ${DAY_W >= 22 ? (e.delta > 0 ? `+${e.delta}d` : e.delta < 0 ? `${e.delta}d` : '✓') : ''}
+      </div>`;
+    }
+
+    // Barra de progresso (% parcial) para atividades com hasPct
+    let baraPctHTML = '';
+    if (e.hasPct && e.pct > 0 && e.pct < 100 && e.previsto) {
+      const left = dayPos(e.previsto);
+      const pctColor = e.pct >= 50 ? 'var(--accent)' : 'var(--yellow)';
+      baraPctHTML = `<div class="gantt-bar" style="left:${left}px;width:${DAY_W}px;background:${pctColor}" title="${e.pct}% concluído">${e.pct}%</div>`;
+    }
+
+    const desvioTxt = e.delta !== null && e.realizado
+      ? (e.delta === 0 ? `<span style="color:var(--green)">✓</span>`
+       : e.delta > 0  ? `<span style="color:var(--red)">+${e.delta}d</span>`
+       :                `<span style="color:var(--accent)">${e.delta}d</span>`)
+      : `<span style="color:var(--text3)">—</span>`;
+
+    return `<tr>
+      <td class="gantt-name-cell" style="color:${dotColor}">
+        <span class="gantt-status-dot" style="background:${dotColor}"></span>${e.icone} ${e.nome}
+      </td>
+      <td class="gantt-date-cell">${e.previsto ? fmtDate(e.previsto) : '<span style="color:var(--text3)">—</span>'}</td>
+      <td class="gantt-date-cell">${e.realizado ? fmtDate(e.realizado) : '<span style="color:var(--text3)">—</span>'}</td>
+      <td class="gantt-bar-cell" style="padding:4px 8px !important">
+        <div class="gantt-bar-bg" style="width:${totalDias*DAY_W}px;--gantt-day-w:${DAY_W}px;position:relative">
+          ${gridLines}${todayLine}
+          ${baraPrevHTML}
+          ${baraPctHTML || baraRealHTML}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="gantt-wrap">
+    <table class="gantt-table">
+      <thead>
+        <tr>
+          <th style="min-width:180px;text-align:left">Atividade</th>
+          <th style="min-width:82px">Previsto</th>
+          <th style="min-width:82px">Realizado</th>
+          <th class="gantt-bar-cell" style="padding:0 !important">
+            <div style="display:flex;overflow:hidden;border-bottom:1px solid var(--border)">
+              ${headerDias}
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>${linhas}</tbody>
+    </table>
+    <div style="display:flex;gap:16px;padding:8px 12px;font-size:10px;color:var(--text3);flex-wrap:wrap;border-top:1px solid var(--border);font-family:'Barlow Condensed',sans-serif">
+      <span><span style="display:inline-block;width:12px;height:8px;background:rgba(0,212,255,.35);border-radius:2px;margin-right:4px"></span>Previsto</span>
+      <span><span style="display:inline-block;width:12px;height:8px;background:var(--green);border-radius:2px;margin-right:4px"></span>Realizado no prazo</span>
+      <span><span style="display:inline-block;width:12px;height:8px;background:var(--red);border-radius:2px;margin-right:4px"></span>Atrasado</span>
+      <span><span style="display:inline-block;width:12px;height:8px;background:var(--accent);border-radius:2px;margin-right:4px"></span>Antecipado / Em andamento</span>
+      <span><span style="display:inline-block;width:2px;height:12px;background:var(--red);margin-right:4px;vertical-align:middle"></span>Hoje</span>
+    </div>
+  </div>`;
 }
 
 // ─── INIT ───
