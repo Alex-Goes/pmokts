@@ -2990,7 +2990,11 @@ const CRONO_LINHAS = [
 // ─── RENDER FLUXO (com dashboard de gestão visual) ───
 function renderFluxo(p) {
   const rc      = p.cronoRealizado || {};
-  const crono   = p.crono || calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, p.inicioManual||null);
+  // Sempre recalcula o crono para garantir que usa as fórmulas mais recentes
+  // (evita usar datas salvas com fórmulas antigas)
+  const crono   = calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, p.inicioManual||null);
+  // Atualiza o crono salvo no projeto silenciosamente
+  if (p.aprovacao || p.tap) { p.crono = crono; }
   const overrides = p.cronoOverride || {};
   const hoje    = new Date().toISOString().split('T')[0];
 
@@ -3354,7 +3358,8 @@ function atualizarDashboardFluxo(p) {
   if (!dashEl) return;
 
   const rc       = p.cronoRealizado || {};
-  const crono    = p.crono || calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, p.inicioManual||null);
+  const crono    = calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, p.inicioManual||null);
+  if (p.aprovacao || p.tap) { p.crono = crono; }
   const overridesD = p.cronoOverride || {};
   const cronoNAd = p.cronoNA || {};
   const hoje     = new Date().toISOString().split('T')[0];
