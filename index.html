@@ -4246,59 +4246,145 @@ function renderDashboardGlobal() {
 
   const mostrarSemResp = !dgFiltroResp || dgFiltroResp === '__todos__' || dgFiltroResp === 'sem_resp';
 
+  // Estado dos filtros de status por responsável (uid → status ativo ou null)
+  // Usamos window para persistir entre renders parciais
+  if (!window.dgFiltroStatus) window.dgFiltroStatus = {};
+
+  const STATUS_FILTROS = [
+    { key: null,                  label: 'Todos',            cor: 'var(--text2)',  icon: '🌐' },
+    { key: 'Atrasado',            label: 'Atrasado',         cor: 'var(--red)',    icon: '🔴' },
+    { key: 'Concluído c/ Atraso', label: 'Conc. c/ Atraso',  cor: '#ff9800',       icon: '⚠️' },
+    { key: 'Em Andamento',        label: 'Em Andamento',     cor: 'var(--accent)', icon: '🔄' },
+    { key: 'Pendente',            label: 'Pendente',         cor: 'var(--yellow)', icon: '⏳' },
+    { key: 'No Prazo',            label: 'Concluído',        cor: 'var(--green)',  icon: '✅' },
+    { key: 'Antecipado',          label: 'Antecipado',       cor: 'var(--accent)', icon: '⚡' },
+    { key: 'N/A',                 label: 'N/A',              cor: 'var(--text3)',  icon: '⊘' },
+  ];
+
   const secoesHTML = [
     // Seções por usuário
     ...mostrarUsuarios.filter(uid => respMap[uid]?.length).map(uid => {
-      const u       = users.find(x=>x.id===uid);
-      const nome    = u?.nome || uid;
-      const ini     = nome.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-      const cor     = roleColors[u?.role] || '#0066ff';
-      const items   = respMap[uid];
-      const atrasadas  = items.filter(i=>i.status==='Atrasado').length;
-      const concluidas = items.filter(i=>i.realizado).length;
-      const pendentes  = items.filter(i=>!i.realizado && i.status!=='Atrasado').length;
+      const u          = users.find(x=>x.id===uid);
+      const nome       = u?.nome || uid;
+      const ini        = nome.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+      const cor        = roleColors[u?.role] || '#0066ff';
+      const allItems   = respMap[uid];
+      const filtroAtivo = window.dgFiltroStatus[uid] || null;
+
+      // Contagem por status
+      const counts = {};
+      allItems.forEach(i => { counts[i.status] = (counts[i.status]||0)+1; });
+      const atrasadas   = allItems.filter(i=>i.status==='Atrasado').length;
+      const concluidas  = allItems.filter(i=>i.realizado).length;
+      const emAndamento = allItems.filter(i=>i.status==='Em Andamento').length;
+      const conclAtraso = allItems.filter(i=>i.status==='Concluído c/ Atraso').length;
+      const pendentes   = allItems.filter(i=>i.status==='Pendente'||i.status==='Sem Data').length;
+
+      // Aplica filtro de status
+      const items = filtroAtivo ? allItems.filter(i => {
+        if (filtroAtivo === 'No Prazo') return i.realizado && i.status === 'No Prazo';
+        return i.status === filtroAtivo;
+      }) : allItems;
+
+      // Botões de filtro de status
+      const filterBtns = STATUS_FILTROS
+        .filter(f => f.key === null || counts[f.key] > 0)
+        .map(f => {
+          const cnt   = f.key ? (counts[f.key]||0) : allItems.length;
+          const ativo = filtroAtivo === f.key;
+          return `<button onclick="dgSetStatusFiltro('${uid}','${f.key||''}');event.stopPropagation()"
+            style="display:inline-flex;align-items:center;gap:4px;
+              padding:3px 9px;border-radius:10px;cursor:pointer;
+              font-size:10px;font-weight:700;font-family:'Barlow Condensed',sans-serif;letter-spacing:.3px;
+              border:1px solid ${ativo ? f.cor : 'var(--border2)'};
+              background:${ativo ? f.cor+'22' : 'transparent'};
+              color:${ativo ? f.cor : 'var(--text3)'};
+              transition:all .15s">
+            ${f.icon} ${f.label} <span style="opacity:.7">${cnt}</span>
+          </button>`;
+        }).join('');
 
       return `<div class="dg-resp-section">
-        <div class="dg-resp-section-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+        <div class="dg-resp-section-head" onclick="dgToggleSection('resp-body-${uid}')">
           <div class="dg-resp-section-avatar" style="background:${cor}">${ini}</div>
-          <div class="dg-resp-section-name">${nome}</div>
-          <div class="dg-resp-section-stats">
-            <span class="dg-resp-stat" style="color:var(--text2)">📋 ${items.length} atividades</span>
-            ${concluidas?`<span class="dg-resp-stat" style="color:var(--green)">✓ ${concluidas} concluídas</span>`:''}
-            ${atrasadas?`<span class="dg-resp-stat" style="color:var(--red)">▲ ${atrasadas} atrasadas</span>`:''}
-            ${pendentes?`<span class="dg-resp-stat" style="color:var(--yellow)">⏳ ${pendentes} pendentes</span>`:''}
+          <div style="flex:1;min-width:0">
+            <div class="dg-resp-section-name">${nome}</div>
+            <div class="dg-resp-section-stats" style="margin-top:4px;flex-wrap:wrap;gap:5px">
+              ${filterBtns}
+            </div>
           </div>
-          <span style="color:var(--text3);font-size:12px;margin-left:8px">▾</span>
+          <div style="display:flex;gap:10px;font-size:11px;margin-left:12px;flex-shrink:0">
+            <span style="color:var(--text2)">📋 ${allItems.length}</span>
+            ${concluidas  ? `<span style="color:var(--green)">✓ ${concluidas}</span>`  : ''}
+            ${conclAtraso ? `<span style="color:#ff9800">⚠ ${conclAtraso}</span>`       : ''}
+            ${atrasadas   ? `<span style="color:var(--red)">▲ ${atrasadas}</span>`     : ''}
+            ${emAndamento ? `<span style="color:var(--accent)">🔄 ${emAndamento}</span>` : ''}
+            ${pendentes   ? `<span style="color:var(--yellow)">⏳ ${pendentes}</span>` : ''}
+          </div>
+          <span style="color:var(--text3);font-size:12px;margin-left:8px;flex-shrink:0">▾</span>
         </div>
-        <div style="padding-left:8px">
-          <div class="dg-resp-header">
-            <span>Atividade</span><span>Projeto</span><span>Previsto</span><span>Realizado</span><span>Status</span><span>Δ</span>
-          </div>
-          ${items.map(linhaAtividade).join('')}
+        <div id="resp-body-${uid}" style="padding-left:8px">
+          ${items.length === 0
+            ? `<div style="padding:14px;text-align:center;font-size:12px;color:var(--text3)">
+                Nenhuma atividade com status "${filtroAtivo}" para ${nome}.
+               </div>`
+            : `<div class="dg-resp-header">
+                <span>Atividade</span><span>Projeto</span><span>Previsto</span><span>Realizado</span><span>Status</span><span>Δ</span>
+               </div>
+               ${items.map(linhaAtividade).join('')}`
+          }
         </div>
       </div>`;
     }),
 
     // Seção sem responsável
-    mostrarSemResp && semResp.length ? `
-    <div class="dg-resp-section">
-      <div class="dg-resp-section-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'"
-        style="border-color:rgba(255,214,0,.3);background:rgba(255,214,0,.04)">
-        <div class="dg-resp-section-avatar" style="background:var(--yellow);color:#000">?</div>
-        <div class="dg-resp-section-name" style="color:var(--yellow)">Sem Responsável Atribuído</div>
-        <div class="dg-resp-section-stats">
-          <span class="dg-resp-stat" style="color:var(--yellow)">⚠ ${semResp.length} atividades sem responsável</span>
-          ${semResp.filter(i=>i.status==='Atrasado').length?`<span class="dg-resp-stat" style="color:var(--red)">▲ ${semResp.filter(i=>i.status==='Atrasado').length} atrasadas</span>`:''}
+    mostrarSemResp && semResp.length ? (() => {
+      const filtroAtivo  = window.dgFiltroStatus['sem_resp'] || null;
+      const counts       = {};
+      semResp.forEach(i => { counts[i.status] = (counts[i.status]||0)+1; });
+      const items        = filtroAtivo ? semResp.filter(i => i.status === filtroAtivo) : semResp;
+
+      const filterBtns = STATUS_FILTROS
+        .filter(f => f.key === null || counts[f.key] > 0)
+        .map(f => {
+          const cnt   = f.key ? (counts[f.key]||0) : semResp.length;
+          const ativo = filtroAtivo === f.key;
+          return `<button onclick="dgSetStatusFiltro('sem_resp','${f.key||''}');event.stopPropagation()"
+            style="display:inline-flex;align-items:center;gap:4px;
+              padding:3px 9px;border-radius:10px;cursor:pointer;
+              font-size:10px;font-weight:700;font-family:'Barlow Condensed',sans-serif;
+              border:1px solid ${ativo ? f.cor : 'var(--border2)'};
+              background:${ativo ? f.cor+'22' : 'transparent'};
+              color:${ativo ? f.cor : 'var(--text3)'};
+              transition:all .15s">
+            ${f.icon} ${f.label} <span style="opacity:.7">${cnt}</span>
+          </button>`;
+        }).join('');
+
+      return `<div class="dg-resp-section">
+        <div class="dg-resp-section-head" onclick="dgToggleSection('resp-body-sem_resp')"
+          style="border-color:rgba(255,214,0,.3);background:rgba(255,214,0,.04)">
+          <div class="dg-resp-section-avatar" style="background:var(--yellow);color:#000">?</div>
+          <div style="flex:1;min-width:0">
+            <div class="dg-resp-section-name" style="color:var(--yellow)">Sem Responsável Atribuído</div>
+            <div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:5px">
+              ${filterBtns}
+            </div>
+          </div>
+          <span style="color:var(--yellow);font-size:11px;margin-left:12px;flex-shrink:0">⚠ ${semResp.length} atividades</span>
+          <span style="color:var(--text3);font-size:12px;margin-left:8px;flex-shrink:0">▾</span>
         </div>
-        <span style="color:var(--text3);font-size:12px;margin-left:8px">▾</span>
-      </div>
-      <div style="padding-left:8px">
-        <div class="dg-resp-header">
-          <span>Atividade</span><span>Projeto</span><span>Previsto</span><span>Realizado</span><span>Status</span><span>Δ</span>
+        <div id="resp-body-sem_resp" style="padding-left:8px">
+          ${items.length === 0
+            ? `<div style="padding:14px;text-align:center;font-size:12px;color:var(--text3)">Nenhuma atividade com este status.</div>`
+            : `<div class="dg-resp-header">
+                <span>Atividade</span><span>Projeto</span><span>Previsto</span><span>Realizado</span><span>Status</span><span>Δ</span>
+               </div>
+               ${items.map(linhaAtividade).join('')}`
+          }
         </div>
-        ${semResp.map(linhaAtividade).join('')}
-      </div>
-    </div>` : ''
+      </div>`;
+    })() : ''
   ].filter(Boolean).join('');
 
   const wResponsaveis = `
@@ -6154,6 +6240,23 @@ function renderGanttGlobal() {
         <div class="gg-legend-item"><div style="width:2px;height:12px;background:var(--red);flex-shrink:0"></div>Hoje</div>
       </div>
     </div>`;
+}
+
+/**
+ * Define o filtro de status para uma seção de responsável e re-renderiza o Dashboard Global
+ */
+function dgSetStatusFiltro(uid, status) {
+  if (!window.dgFiltroStatus) window.dgFiltroStatus = {};
+  window.dgFiltroStatus[uid] = status || null;
+  renderDashboardGlobal();
+}
+
+/**
+ * Colapsa/expande uma seção de responsável pelo ID do body
+ */
+function dgToggleSection(bodyId) {
+  const el = document.getElementById(bodyId);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
 }
 
 // ─── INIT ───
