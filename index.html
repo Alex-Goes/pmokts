@@ -1410,6 +1410,109 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
   font-weight: 700; letter-spacing: .5px; margin-left: 4px;
 }
 
+/* ─── GANTT GLOBAL ─── */
+.gg-wrap { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.gg-toolbar {
+  flex-shrink: 0; padding: 10px 20px; background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.gg-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; color: var(--text); }
+.gg-filter-group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.gg-filter-label { font-size: 10px; color: var(--text3); font-family: 'Barlow Condensed', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.gg-proj-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 20px; cursor: pointer;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700;
+  border: 1px solid var(--border2); background: var(--card); color: var(--text2);
+  transition: all .15s; user-select: none;
+}
+.gg-proj-chip:hover { border-color: var(--accent); color: var(--text); }
+.gg-proj-chip.active { background: rgba(0,212,255,.1); border-color: var(--accent); color: var(--accent); }
+.gg-proj-chip .gg-chip-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.gg-zoom-group { display: flex; gap: 4px; margin-left: auto; }
+.gg-zoom-btn {
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 5px; cursor: pointer; color: var(--text2);
+  font-size: 12px; padding: 4px 10px; font-weight: 700;
+  transition: all .15s; font-family: 'Barlow Condensed', sans-serif;
+}
+.gg-zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
+.gg-zoom-btn.active { background: rgba(0,212,255,.1); border-color: var(--accent); color: var(--accent); }
+.gg-content { flex: 1; overflow: auto; padding: 16px 20px 24px; }
+.gg-chart-wrap {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden; min-width: 600px;
+}
+.gg-chart-header {
+  display: flex; background: var(--bg); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+.gg-proj-col-head {
+  flex-shrink: 0; padding: 8px 14px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--text3);
+  border-right: 1px solid var(--border);
+}
+.gg-dates-head { flex: 1; display: flex; overflow: hidden; position: relative; }
+.gg-date-cell {
+  flex-shrink: 0; text-align: center; border-right: 1px solid rgba(37,45,64,.4);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 9px; font-weight: 700;
+  color: var(--text3); padding: 5px 2px; line-height: 1.3;
+}
+.gg-date-cell.weekend { background: rgba(255,255,255,.02); color: rgba(255,255,255,.2); }
+.gg-date-cell.today-col { background: rgba(255,23,68,.08); color: var(--red); font-weight: 900; }
+.gg-date-cell.month-start { border-left: 2px solid rgba(0,212,255,.2); }
+.gg-row {
+  display: flex; border-bottom: 1px solid rgba(37,45,64,.4);
+  transition: background .1s;
+}
+.gg-row:last-child { border-bottom: none; }
+.gg-row:hover { background: rgba(255,255,255,.02); }
+.gg-row-label {
+  flex-shrink: 0; padding: 8px 14px; border-right: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.gg-row-label-inner { min-width: 0; }
+.gg-row-proj { font-size: 11px; font-weight: 700; color: var(--text); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gg-row-proj:hover { color: var(--accent); }
+.gg-row-sub { font-size: 9px; color: var(--text3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gg-row-bar-area { flex: 1; position: relative; overflow: hidden; }
+.gg-bar-bg-row {
+  position: absolute; top: 0; bottom: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent, transparent calc(var(--gd-w) - 1px), rgba(255,255,255,.025) calc(var(--gd-w) - 1px), rgba(255,255,255,.025) var(--gd-w));
+}
+.gg-bar {
+  position: absolute; height: 18px; top: 50%; transform: translateY(-50%);
+  border-radius: 4px; display: flex; align-items: center; justify-content: flex-start;
+  padding: 0 6px; font-size: 10px; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; cursor: pointer;
+  transition: opacity .15s, filter .15s; min-width: 4px;
+  font-family: 'Barlow Condensed', sans-serif; letter-spacing: .3px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.gg-bar:hover { opacity: .85; filter: brightness(1.15); }
+.gg-bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gg-today-line {
+  position: absolute; top: 0; bottom: 0; width: 2px;
+  background: var(--red); z-index: 5; pointer-events: none;
+}
+.gg-today-line::after {
+  content: '▼'; position: absolute; top: -10px; left: 50%;
+  transform: translateX(-50%); color: var(--red); font-size: 10px;
+}
+.gg-empty {
+  text-align: center; padding: 60px 20px;
+  font-size: 14px; color: var(--text3);
+}
+.gg-legend {
+  display: flex; gap: 14px; flex-wrap: wrap; padding: 8px 14px;
+  border-top: 1px solid var(--border); font-size: 10px;
+  font-family: 'Barlow Condensed', sans-serif; color: var(--text3);
+}
+.gg-legend-item { display: flex; align-items: center; gap: 5px; }
+.gg-legend-dot { width: 12px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
 /* ─── PRINT ─── */
 @media print {
   .topbar, .sidebar, .tabs, .proj-actions, .topbar-actions, .btn { display: none !important; }
@@ -1668,6 +1771,7 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
   <div class="brand">PMO KTS <span>ONBOARDING DE PROJETOS</span></div>
   <div class="topbar-actions">
     <button class="pill" id="pill-dashboard" onclick="toggleDashboardGlobal()">🌐 Dashboard Global</button>
+    <button class="pill" id="pill-gantt-global" onclick="toggleGanttGlobal()">📊 Gantt Global</button>
     <button class="pill" onclick="exportCSV()">⬇ CSV</button>
     <button class="pill" onclick="exportRelatorio()">📄 Relatório PDF</button>
     <button class="pill active" onclick="openModalProjeto()">＋ Novo Projeto</button>
@@ -1744,6 +1848,30 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
         <button class="btn btn-ghost" onclick="limparFiltroResp()" style="font-size:10px;padding:4px 10px;margin-left:4px">✕ Limpar filtro</button>
       </div>
       <div id="dg-content" style="flex:1;overflow-y:auto;padding:20px 24px 32px"></div>
+    </div>
+
+    <!-- GANTT GLOBAL -->
+    <div id="gantt-global" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      <div class="gg-wrap">
+        <div class="gg-toolbar">
+          <div class="gg-title">📊 Gantt Global</div>
+          <div style="width:1px;height:22px;background:var(--border)"></div>
+          <div class="gg-filter-label">Zoom:</div>
+          <div class="gg-zoom-group">
+            <button class="gg-zoom-btn" data-zoom="day"   onclick="setGanttZoom('day')">Dia</button>
+            <button class="gg-zoom-btn active" data-zoom="week" onclick="setGanttZoom('week')">Semana</button>
+            <button class="gg-zoom-btn" data-zoom="month" onclick="setGanttZoom('month')">Mês</button>
+          </div>
+          <div style="width:1px;height:22px;background:var(--border)"></div>
+          <div class="gg-filter-label">Projetos:</div>
+          <div id="gg-proj-chips" class="gg-filter-group"></div>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="btn btn-ghost" onclick="ggSelectAll()" style="font-size:10px;padding:4px 10px">Todos</button>
+            <button class="btn btn-ghost" onclick="ggSelectNone()" style="font-size:10px;padding:4px 10px">Nenhum</button>
+          </div>
+        </div>
+        <div class="gg-content" id="gg-content"></div>
+      </div>
     </div>
 
     <!-- PROJETO ABERTO -->
@@ -4417,10 +4545,17 @@ function renderDashboardGlobal() {
 }
 // Abre um projeto pelo dashboard global
 function abrirProjetoDash(id) {
+  // Fecha Dashboard Global
   dashGlobalOpen = false;
   document.getElementById('dashboard-global').style.display = 'none';
   document.getElementById('pill-dashboard').classList.remove('active');
+  // Fecha Gantt Global
+  ganttGlobalOpen = false;
+  document.getElementById('gantt-global').style.display = 'none';
+  document.getElementById('pill-gantt-global').classList.remove('active');
+  // Abre o projeto
   projId = id;
+  document.getElementById('proj-view').style.display = 'flex';
   openProjeto(id);
 }
 
@@ -5649,6 +5784,307 @@ function renderGantt(etapasStatus, p) {
       <span><span style="display:inline-block;width:2px;height:12px;background:var(--red);margin-right:4px;vertical-align:middle"></span>Hoje</span>
     </div>
   </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// GANTT GLOBAL — Visão de todos os projetos em timeline
+// ═══════════════════════════════════════════════════════════════════
+
+let ggZoom         = 'week';   // 'day' | 'week' | 'month'
+let ggProjAtivos   = new Set(); // IDs de projetos visíveis
+let ganttGlobalOpen = false;
+
+// Cores por projeto (rotativo)
+const GG_CORES = [
+  '#0066ff','#00d4ff','#7c4dff','#00e676','#ff6b35',
+  '#ff9800','#e91e63','#26c6da','#8bc34a','#ff5252',
+];
+function ggCor(idx) { return GG_CORES[idx % GG_CORES.length]; }
+
+function toggleGanttGlobal() {
+  const el  = document.getElementById('gantt-global');
+  const btn = document.getElementById('pill-gantt-global');
+  const dg  = document.getElementById('dashboard-global');
+  const pv  = document.getElementById('proj-view');
+
+  if (ganttGlobalOpen) {
+    ganttGlobalOpen = false;
+    el.style.display = 'none';
+    btn.classList.remove('active');
+    if (projId) { pv.style.display = 'flex'; }
+  } else {
+    ganttGlobalOpen = true;
+    el.style.display = 'flex';
+    btn.classList.add('active');
+    // Fecha outros painéis
+    dg.style.display = 'none';
+    document.getElementById('pill-dashboard').classList.remove('active');
+    pv.style.display = 'none';
+    // Inicializa chips e renderiza
+    ggInicializarChips();
+    renderGanttGlobal();
+  }
+}
+
+function ggInicializarChips() {
+  const projs = db.projetos.filter(p => !['Concluído','Suspenso','Cancelado'].includes(p.status));
+  // Ativa todos por padrão
+  ggProjAtivos = new Set(projs.map(p => p.id));
+  renderGanttChips();
+}
+
+function renderGanttChips() {
+  const projs = db.projetos;
+  const el = document.getElementById('gg-proj-chips');
+  el.innerHTML = projs.map((p, i) => {
+    const cor   = ggCor(i);
+    const ativo = ggProjAtivos.has(p.id);
+    return `<div class="gg-proj-chip ${ativo ? 'active' : ''}" 
+              onclick="ggToggleProj('${p.id}')"
+              style="${ativo ? `border-color:${cor};color:${cor};background:${cor}18` : ''}">
+      <div class="gg-chip-dot" style="background:${ativo ? cor : 'var(--border2)'}"></div>
+      ${p.proposta || p.nome}
+    </div>`;
+  }).join('');
+}
+
+function ggToggleProj(id) {
+  if (ggProjAtivos.has(id)) ggProjAtivos.delete(id);
+  else ggProjAtivos.add(id);
+  renderGanttChips();
+  renderGanttGlobal();
+}
+
+function ggSelectAll() {
+  ggProjAtivos = new Set(db.projetos.map(p => p.id));
+  renderGanttChips();
+  renderGanttGlobal();
+}
+
+function ggSelectNone() {
+  ggProjAtivos = new Set();
+  renderGanttChips();
+  renderGanttGlobal();
+}
+
+function setGanttZoom(zoom) {
+  ggZoom = zoom;
+  document.querySelectorAll('.gg-zoom-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.zoom === zoom);
+  });
+  renderGanttGlobal();
+}
+
+function renderGanttGlobal() {
+  const el    = document.getElementById('gg-content');
+  const hoje  = new Date().toISOString().split('T')[0];
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  const projs = db.projetos.filter(p => ggProjAtivos.has(p.id));
+
+  if (!projs.length) {
+    el.innerHTML = `<div class="gg-empty">Nenhum projeto selecionado. Ative projetos nos chips acima.</div>`;
+    return;
+  }
+
+  // ── Calcular intervalo de datas ──────────────────────────────────────────
+  const todasDatas = [];
+  projs.forEach(p => {
+    if (p.inicio)  todasDatas.push(p.inicio);
+    if (p.termino) todasDatas.push(p.termino);
+    // Também considera datas do fluxo
+    const crono = p.crono || {};
+    Object.values(crono).forEach(d => { if (d && typeof d === 'string' && d.length === 10) todasDatas.push(d); });
+  });
+  todasDatas.push(hoje);
+  if (!todasDatas.length) { el.innerHTML = `<div class="gg-empty">Projetos sem datas definidas.</div>`; return; }
+
+  const dMin = todasDatas.reduce((a,b) => a < b ? a : b);
+  const dMax = todasDatas.reduce((a,b) => a > b ? a : b);
+
+  // Expande intervalo
+  const dtMin = new Date(dMin + 'T00:00:00'); dtMin.setDate(dtMin.getDate() - 3);
+  const dtMax = new Date(dMax + 'T00:00:00'); dtMax.setDate(dtMax.getDate() + 7);
+
+  // Gera dias
+  const dias = [];
+  const cur  = new Date(dtMin);
+  while (cur <= dtMax) {
+    dias.push(cur.toISOString().split('T')[0]);
+    cur.setDate(cur.getDate() + 1);
+  }
+  const totalDias = dias.length;
+
+  // Largura por célula conforme zoom
+  const CELL_W = ggZoom === 'day' ? 28 : ggZoom === 'week' ? 18 : 10;
+
+  // dayPos helper
+  const dayPos = (d) => {
+    if (!d) return -1;
+    const diff = Math.round((new Date(d + 'T00:00:00') - dtMin) / 86400000);
+    return diff * CELL_W;
+  };
+
+  // ── Cabeçalho de datas ───────────────────────────────────────────────────
+  // Agrupa por mês
+  const mesBlocks = [];
+  let mesAtual = null, mesCount = 0, mesStart = 0;
+  dias.forEach((d, i) => {
+    const dt  = new Date(d + 'T00:00:00');
+    const key = `${dt.getFullYear()}-${dt.getMonth()}`;
+    if (key !== mesAtual) {
+      if (mesAtual !== null) mesBlocks.push({ label: '', idx: mesStart, count: mesCount, dt: null });
+      mesAtual = key;
+      mesCount = 1;
+      mesStart = i;
+      mesBlocks[mesBlocks.length] = { label: `${meses[dt.getMonth()]} ${dt.getFullYear()}`, idx: i, count: 1, dt };
+    } else { mesCount++; if (mesBlocks.length) mesBlocks[mesBlocks.length-1].count = mesCount; }
+  });
+
+  // Linha de meses
+  const mesHeaderHTML = mesBlocks.map(m => `
+    <div style="flex-shrink:0;width:${m.count * CELL_W}px;padding:3px 6px;
+      border-right:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;
+      font-size:9px;font-weight:700;color:var(--accent);overflow:hidden;white-space:nowrap">
+      ${m.label}
+    </div>`).join('');
+
+  // Linha de dias
+  const diaHeaderHTML = dias.map(d => {
+    const dt  = new Date(d + 'T00:00:00');
+    const dow = dt.getDay();
+    const isWE = dow === 0 || dow === 6;
+    const isT  = d === hoje;
+    const cls  = isT ? 'today-col' : isWE ? 'weekend' : '';
+    const lbl  = ggZoom === 'month'
+      ? (dt.getDate() === 1 ? `${dt.getDate()}` : (dt.getDate() % 7 === 1 ? `${dt.getDate()}` : ''))
+      : `${dt.getDate()}`;
+    return `<div class="gg-date-cell ${cls}" style="width:${CELL_W}px;min-width:${CELL_W}px">${lbl}</div>`;
+  }).join('');
+
+  // Linha de hoje
+  const hojeLeft  = dayPos(hoje);
+  const todayLine = `<div class="gg-today-line" style="left:${hojeLeft}px"></div>`;
+
+  // Largura total da área de barras
+  const barAreaW  = totalDias * CELL_W;
+
+  // ── Linhas por projeto ────────────────────────────────────────────────────
+  const LABEL_W = 200; // px da coluna de nome
+
+  const linhasHTML = projs.map((p, idx) => {
+    const cor    = ggCor(db.projetos.indexOf(p));
+    const inicio = p.inicio  || '';
+    const termino= p.termino || '';
+    const st     = p.status  || 'Em andamento';
+
+    // Barra principal do projeto
+    let barHTML = '';
+    if (inicio && termino) {
+      const left = dayPos(inicio);
+      const right= dayPos(termino) + CELL_W;
+      const w    = Math.max(CELL_W, right - left);
+      const pct  = calcFluxoPct(p);
+      const label= w > 60 ? `${p.proposta || p.nome} · ${pct}%` : w > 28 ? `${pct}%` : '';
+
+      barHTML = `
+        <!-- Barra fundo (total) -->
+        <div class="gg-bar" style="left:${left}px;width:${w}px;background:${cor}40;box-shadow:none" title="${p.nome}"></div>
+        <!-- Barra progresso -->
+        <div class="gg-bar" style="left:${left}px;width:${Math.max(CELL_W, w * pct/100)}px;background:${cor};opacity:.9"
+          onclick="abrirProjetoDash('${p.id}')" title="${p.nome} — ${pct}% concluído">
+          <span class="gg-bar-label">${label}</span>
+        </div>`;
+    }
+
+    // Marcos das atividades do fluxo (pequenos losangos)
+    const crono     = p.crono || calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, detectarInicioManual(p));
+    const rc        = p.cronoRealizado || {};
+    const overrides = p.cronoOverride  || {};
+    const cronoNA   = p.cronoNA        || {};
+
+    const marcosHTML = CRONO_LINHAS.map(l => {
+      const [chaveCalc, chaveReal, icone] = l;
+      if (cronoNA[chaveCalc]) return '';
+      const prev = overrides[chaveCalc] || crono[chaveCalc] || '';
+      const real = rc[chaveReal] || '';
+      if (!prev) return '';
+      const left   = dayPos(prev) + CELL_W/2 - 5;
+      const corMar = real ? 'var(--green)' : prev < hoje ? 'var(--red)' : 'rgba(255,255,255,.3)';
+      return `<div style="position:absolute;left:${left}px;top:50%;transform:translateY(-50%) rotate(45deg);
+        width:7px;height:7px;background:${corMar};border:1px solid rgba(0,0,0,.3);
+        pointer-events:none;z-index:3" title="${icone} Previsto: ${fmtDate(prev)}${real?' | Real: '+fmtDate(real):''}"></div>`;
+    }).join('');
+
+    const statusCor = st === 'Concluído' ? 'var(--green)' : st === 'Suspenso' ? 'var(--text3)' : cor;
+    const pctProj   = calcFluxoPct(p);
+
+    return `<div class="gg-row">
+      <div class="gg-row-label" style="width:${LABEL_W}px;min-width:${LABEL_W}px">
+        <div style="width:4px;height:32px;border-radius:2px;background:${cor};flex-shrink:0"></div>
+        <div class="gg-row-label-inner" style="max-width:${LABEL_W-40}px">
+          <div class="gg-row-proj" onclick="abrirProjetoDash('${p.id}')" title="${p.nome}">${p.proposta || p.nome}</div>
+          <div class="gg-row-sub">${p.cliente||''} · ${inicio ? fmtDate(inicio) : '?'} → ${termino ? fmtDate(termino) : '?'} · ${p.dias||'?'}d · ${pctProj}%</div>
+        </div>
+      </div>
+      <div class="gg-row-bar-area" style="min-width:${barAreaW}px">
+        <div class="gg-bar-bg-row" style="width:${barAreaW}px;--gd-w:${CELL_W}px"></div>
+        ${todayLine}
+        ${barHTML}
+        ${marcosHTML}
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="gg-chart-wrap" style="--gd-w:${CELL_W}px">
+      <!-- Header meses -->
+      <div class="gg-chart-header">
+        <div class="gg-proj-col-head" style="width:${LABEL_W}px;min-width:${LABEL_W}px">Projeto</div>
+        <div class="gg-dates-head">
+          <div style="display:flex;position:sticky;top:0">
+            <div style="position:absolute;top:0;left:0;right:0;display:flex;border-bottom:1px solid var(--border)">
+              ${mesHeaderHTML}
+            </div>
+            <div style="display:flex;margin-top:18px">
+              ${diaHeaderHTML}
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Linhas de projetos -->
+      <div style="overflow-x:auto">
+        <div style="min-width:${LABEL_W + barAreaW}px">
+          <div class="gg-chart-header" style="position:relative">
+            <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;border-right:1px solid var(--border);
+              background:var(--bg);padding:4px 14px;display:flex;align-items:flex-end">
+              <div style="display:flex;flex-direction:column">
+                <div style="font-size:8px;color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.5px">${mesHeaderHTML.length > 0 ? '' : ''}</div>
+              </div>
+            </div>
+            <div style="display:flex;position:relative;overflow:hidden">
+              <div style="display:flex">
+                ${mesHeaderHTML}
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;background:var(--bg2);border-bottom:2px solid var(--border)">
+            <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;border-right:1px solid var(--border)"></div>
+            <div style="display:flex">${diaHeaderHTML}</div>
+          </div>
+          ${linhasHTML}
+        </div>
+      </div>
+      <!-- Legenda -->
+      <div class="gg-legend">
+        <div class="gg-legend-item"><div class="gg-legend-dot" style="background:var(--accent);opacity:.4"></div>Barra (total previsto)</div>
+        <div class="gg-legend-item"><div class="gg-legend-dot" style="background:var(--accent)"></div>Progresso (%)</div>
+        <div class="gg-legend-item"><div style="width:8px;height:8px;background:var(--green);transform:rotate(45deg);flex-shrink:0"></div>Marco concluído</div>
+        <div class="gg-legend-item"><div style="width:8px;height:8px;background:var(--red);transform:rotate(45deg);flex-shrink:0"></div>Marco atrasado</div>
+        <div class="gg-legend-item"><div style="width:8px;height:8px;background:rgba(255,255,255,.3);transform:rotate(45deg);flex-shrink:0"></div>Marco pendente</div>
+        <div class="gg-legend-item"><div style="width:2px;height:12px;background:var(--red);flex-shrink:0"></div>Hoje</div>
+      </div>
+    </div>`;
 }
 
 // ─── INIT ───
