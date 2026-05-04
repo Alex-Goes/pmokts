@@ -2943,24 +2943,20 @@ function calcularCronograma(aprovacao, tap, diasVendidos, inicioManual) {
 
   // INÍCIO: usa manual se fornecido, senão calcula Aprovação + 20 dias corridos
   if (inicioManual) {
-    // Regra Manual: início definido pelo usuário
-    // As etapas ANTES do início são recalculadas de trás para frente
     d.inicioProj         = inicioManual;
-    d.handoverEquipePrev = addDias(inicioManual, -1);  // 1 dia antes do início
-    d.impressaoProjPrev  = addDias(inicioManual, -2);  // 2 dias antes
-    d.elaboracaoProjPrev = addDias(inicioManual, -3);  // 3 dias antes
+    d.handoverEquipePrev = addDias(inicioManual, -1);
+    d.impressaoProjPrev  = addDias(inicioManual, -2);
+    d.elaboracaoProjPrev = addDias(inicioManual, -3);
   } else {
-    // Regra Automática: baseado na aprovação
-    d.elaboracaoProjPrev = addDias(aprovacao, 16); // APROV + 16
-    d.impressaoProjPrev  = addDias(d.elaboracaoProjPrev, 1); // Elab + 1
-    d.handoverEquipePrev = addDias(aprovacao, 19); // APROV + 19
-    d.inicioProj         = addDias(aprovacao, 20); // APROV + 20
+    d.elaboracaoProjPrev = addDias(aprovacao, 16);
+    d.impressaoProjPrev  = addDias(d.elaboracaoProjPrev, 1);
+    d.handoverEquipePrev = addDias(aprovacao, 19);
+    d.inicioProj         = addDias(aprovacao, 20);
   }
 
-  // Grupo AS Built = sempre 2 dias ÚTEIS antes do início (independente do modo)
-  d.grupoTelegramPrev  = addDiasUteis(d.inicioProj, -2); // Início - 2 dias úteis
-
-  d.terminoProj        = addDiasUteis(d.inicioProj, diasVendidos); // Início + Dias Úteis
+  // Grupo AS Built = 2 dias ÚTEIS antes do início
+  d.grupoTelegramPrev  = addDiasUteis(d.inicioProj, -2);
+  d.terminoProj        = addDiasUteis(d.inicioProj, diasVendidos);
 
   // ETAPAS PÓS-ENTREGA
   d.infoAsBuiltPrev    = d.terminoProj;
@@ -2968,6 +2964,22 @@ function calcularCronograma(aprovacao, tap, diasVendidos, inicioManual) {
   d.fechamentoPrev     = addDias(d.emissaoAsBuiltPrev, 1);
 
   return d;
+}
+
+/**
+ * Detecta o início manual de um projeto comparando p.inicio com o cálculo automático.
+ * Retorna o inicioManual a usar, ou null se for automático.
+ */
+function detectarInicioManual(p) {
+  if (p.inicioManual) return p.inicioManual;
+  if (!p.inicio) return null;
+  // Calcula o início automático
+  if (!p.aprovacao) return p.inicio; // sem aprovação, qualquer início é manual
+  const da = new Date(p.aprovacao + 'T00:00:00');
+  da.setDate(da.getDate() + 20);
+  const inicioAuto = da.toISOString().split('T')[0];
+  // Se p.inicio é diferente do automático → é manual
+  return p.inicio !== inicioAuto ? p.inicio : null;
 }
 
 // ─── RENDER FLUXO ───
@@ -2990,21 +3002,11 @@ const CRONO_LINHAS = [
 // ─── RENDER FLUXO (com dashboard de gestão visual) ───
 function renderFluxo(p) {
   const rc      = p.cronoRealizado || {};
-  // Sempre recalcula o crono para garantir que usa as fórmulas mais recentes
-  // Se o projeto tem p.inicio salvo E ele difere do cálculo automático (Aprovação+20d),
-  // usa p.inicio como início manual — assim preserva datas definidas pelo usuário
-  const _inicioAuto = (() => {
-    if (!p.aprovacao) return '';
-    const da = new Date(p.aprovacao + 'T00:00:00'); da.setDate(da.getDate()+20);
-    return da.toISOString().split('T')[0];
-  })();
-  const _inicioManual = p.inicioManual || (p.inicio && p.inicio !== _inicioAuto ? p.inicio : null);
+  // Detecta início manual e recalcula com as fórmulas mais recentes
+  const _inicioManual = detectarInicioManual(p);
+  if (_inicioManual && !p.inicioManual) { p.inicioManual = _inicioManual; }
   const crono   = calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, _inicioManual);
-  // Atualiza o crono e a flag inicioManual no projeto
-  if (p.aprovacao || p.tap) {
-    p.crono = crono;
-    if (_inicioManual && !p.inicioManual) p.inicioManual = _inicioManual;
-  }
+  if (p.aprovacao || p.tap) p.crono = crono;
   const overrides = p.cronoOverride || {};
   const hoje    = new Date().toISOString().split('T')[0];
 
@@ -3368,17 +3370,10 @@ function atualizarDashboardFluxo(p) {
   if (!dashEl) return;
 
   const rc       = p.cronoRealizado || {};
-  const _inicioAutoD = (() => {
-    if (!p.aprovacao) return '';
-    const da = new Date(p.aprovacao + 'T00:00:00'); da.setDate(da.getDate()+20);
-    return da.toISOString().split('T')[0];
-  })();
-  const _inicioManualD = p.inicioManual || (p.inicio && p.inicio !== _inicioAutoD ? p.inicio : null);
+  const _inicioManualD = detectarInicioManual(p);
+  if (_inicioManualD && !p.inicioManual) p.inicioManual = _inicioManualD;
   const crono    = calcularCronograma(p.aprovacao||'', p.tap||'', parseInt(p.dias)||0, _inicioManualD);
-  if (p.aprovacao || p.tap) {
-    p.crono = crono;
-    if (_inicioManualD && !p.inicioManual) p.inicioManual = _inicioManualD;
-  }
+  if (p.aprovacao || p.tap) p.crono = crono;
   const overridesD = p.cronoOverride || {};
   const cronoNAd = p.cronoNA || {};
   const hoje     = new Date().toISOString().split('T')[0];
@@ -3525,13 +3520,7 @@ function bindFluxoEventos(p) {
     const mudou = apr !== valorAntes.apr || tap !== valorAntes.tap || String(dias) !== valorAntes.dias;
     valorAntes = { apr, tap, dias: String(dias) };
 
-    // Respeita início manual: usa p.inicioManual OU detecta que p.inicio difere do auto
-    const _autoInicio = (() => {
-      if (!apr) return '';
-      const da = new Date(apr + 'T00:00:00'); da.setDate(da.getDate()+20);
-      return da.toISOString().split('T')[0];
-    })();
-    const inicioManual = p.inicioManual || (p.inicio && p.inicio !== _autoInicio ? p.inicio : null);
+    const inicioManual = detectarInicioManual(p);
     const crono = calcularCronograma(apr, tap, dias, inicioManual);
 
     p.aprovacao = apr;
