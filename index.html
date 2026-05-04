@@ -3055,9 +3055,9 @@ function renderFluxo(p) {
 
     let status, cor, bg;
     if (realizado) {
-      if (delta === 0)    { status = 'No Prazo';   cor = 'var(--green)'; bg = 'rgba(0,230,118,.12)'; }
-      else if (delta > 0) { status = 'Atrasado';   cor = 'var(--red)';   bg = 'rgba(255,23,68,.12)'; }
-      else                { status = 'Antecipado'; cor = 'var(--accent)';bg = 'rgba(0,212,255,.12)'; }
+      if (delta === 0)    { status = 'No Prazo';          cor = 'var(--green)';  bg = 'rgba(0,230,118,.12)'; }
+      else if (delta > 0) { status = 'Concluído c/ Atraso'; cor = '#ff9800';     bg = 'rgba(255,152,0,.12)'; }
+      else                { status = 'Antecipado';         cor = 'var(--accent)';bg = 'rgba(0,212,255,.12)'; }
     } else if (hasPct && pctSalvo > 0 && pctSalvo < 100) {
       status = 'Em Andamento'; cor = 'var(--accent)'; bg = 'rgba(0,212,255,.08)';
     } else if (previsto && previsto < hoje) {
@@ -3074,22 +3074,23 @@ function renderFluxo(p) {
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const naoAplicaveis = etapasStatus.filter(e => e.isNA).length;
-  const total      = etapasStatus.filter(e => !e.isNA).length;
-  const concluidas = etapasStatus.filter(e => e.realizado && !e.isNA).length;
-  const emAndamento= etapasStatus.filter(e => e.status === 'Em Andamento').length;
-  const atrasadas  = etapasStatus.filter(e => e.status === 'Atrasado').length;
-  const antecipadas= etapasStatus.filter(e => e.status === 'Antecipado').length;
-  const pendentes  = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
-  // Progresso considera % parciais das atividades com hasPct
-  const pctGeral   = total > 0 ? Math.round(etapasStatus.filter(e=>!e.isNA).reduce((a,e) => a + (e.pct||0), 0) / (total * 100) * 100) : 0;
+  const total       = etapasStatus.filter(e => !e.isNA).length;
+  const concluidas  = etapasStatus.filter(e => e.realizado && !e.isNA).length;
+  const emAndamento = etapasStatus.filter(e => e.status === 'Em Andamento').length;
+  const atrasadas   = etapasStatus.filter(e => e.status === 'Atrasado').length;
+  const conclAtraso = etapasStatus.filter(e => e.status === 'Concluído c/ Atraso').length;
+  const antecipadas = etapasStatus.filter(e => e.status === 'Antecipado').length;
+  const pendentes   = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
+  const pctGeral    = total > 0 ? Math.round(etapasStatus.filter(e=>!e.isNA).reduce((a,e) => a + (e.pct||0), 0) / (total * 100) * 100) : 0;
 
   // ── Kanban por status ─────────────────────────────────────────────────────
   const kanbanCols = [
-    { key: 'Pendente',      label: 'Pendente / Aguardando', cor: 'var(--yellow)', icon: '⏳' },
-    { key: 'Em Andamento',  label: 'Em Andamento',          cor: 'var(--accent)', icon: '🔄' },
-    { key: 'No Prazo',      label: 'No Prazo',              cor: 'var(--green)',  icon: '✅' },
-    { key: 'Atrasado',      label: 'Atrasado',              cor: 'var(--red)',    icon: '🔴' },
-    { key: 'Antecipado',    label: 'Antecipado',            cor: 'var(--accent)', icon: '⚡' },
+    { key: 'Pendente',            label: 'Pendente / Aguardando', cor: 'var(--yellow)', icon: '⏳' },
+    { key: 'Em Andamento',        label: 'Em Andamento',          cor: 'var(--accent)', icon: '🔄' },
+    { key: 'No Prazo',            label: 'No Prazo',              cor: 'var(--green)',  icon: '✅' },
+    { key: 'Atrasado',            label: 'Atrasado (Em Aberto)',  cor: 'var(--red)',    icon: '🔴' },
+    { key: 'Concluído c/ Atraso', label: 'Concluído c/ Atraso',  cor: '#ff9800',       icon: '⚠️' },
+    { key: 'Antecipado',          label: 'Antecipado',            cor: 'var(--accent)', icon: '⚡' },
   ];
 
   const cardDelta = (e) => {
@@ -3275,6 +3276,10 @@ function renderFluxo(p) {
           <div class="fdash-kpi-val" style="color:var(--red)">${atrasadas}</div>
           <div class="fdash-kpi-lbl">Atrasadas</div>
         </div>
+        <div class="fdash-kpi" style="border-top-color:#ff9800">
+          <div class="fdash-kpi-val" style="color:#ff9800">${conclAtraso}</div>
+          <div class="fdash-kpi-lbl">Conc. c/ Atraso</div>
+        </div>
         <div class="fdash-kpi pend">
           <div class="fdash-kpi-val" style="color:var(--yellow)">${pendentes}</div>
           <div class="fdash-kpi-lbl">Pendentes</div>
@@ -3303,8 +3308,8 @@ function renderFluxo(p) {
           }).join('')}
         </div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:6px;font-family:'Barlow Condensed',sans-serif">
-          <span>${concluidas} de ${total} atividades concluídas${naoAplicaveis>0?` · ${naoAplicaveis} N/A`:''}</span>
-          <span>${atrasadas > 0 ? `⚠ ${atrasadas} atrasada${atrasadas>1?'s':''}` : '✓ Sem atrasos'}</span>
+          <span>${concluidas} de ${total} atividades concluídas${conclAtraso > 0 ? ` · <span style="color:#ff9800">${conclAtraso} c/ atraso</span>` : ''}${naoAplicaveis>0?` · ${naoAplicaveis} N/A`:''}</span>
+          <span>${atrasadas > 0 ? `⚠ ${atrasadas} em aberto e atrasada${atrasadas>1?'s':''}` : '✓ Sem atrasos em aberto'}</span>
         </div>
       </div>
 
@@ -3422,9 +3427,9 @@ function atualizarDashboardFluxo(p) {
     const pctSalvo  = hasPct ? (parseInt((p.cronoPct && p.cronoPct[chaveCalc] !== undefined) ? p.cronoPct[chaveCalc] : 0) || 0) : (realizado ? 100 : 0);
     let status, cor, bg;
     if (realizado) {
-      if (delta === 0)    { status = 'No Prazo';   cor = 'var(--green)'; bg = 'rgba(0,230,118,.12)'; }
-      else if (delta > 0) { status = 'Atrasado';   cor = 'var(--red)';   bg = 'rgba(255,23,68,.12)'; }
-      else                { status = 'Antecipado'; cor = 'var(--accent)';bg = 'rgba(0,212,255,.12)'; }
+      if (delta === 0)    { status = 'No Prazo';          cor = 'var(--green)';  bg = 'rgba(0,230,118,.12)'; }
+      else if (delta > 0) { status = 'Concluído c/ Atraso'; cor = '#ff9800';     bg = 'rgba(255,152,0,.12)'; }
+      else                { status = 'Antecipado';         cor = 'var(--accent)';bg = 'rgba(0,212,255,.12)'; }
     } else if (hasPct && pctSalvo > 0 && pctSalvo < 100) {
       status = 'Em Andamento'; cor = 'var(--accent)'; bg = 'rgba(0,212,255,.08)';
     } else if (previsto && previsto < hoje) {
@@ -3437,21 +3442,26 @@ function atualizarDashboardFluxo(p) {
     return { i, icone, nome, previsto, realizado, delta, status, cor, bg, isNA: false, pct: pctSalvo, hasPct: !!hasPct };
   });
 
-  const total      = etapasStatus.filter(e => !e.isNA).length;
-  const concluidas = etapasStatus.filter(e => e.realizado && !e.isNA).length;
-  const atrasadas  = etapasStatus.filter(e => e.status === 'Atrasado').length;
-  const antecipadas= etapasStatus.filter(e => e.status === 'Antecipado').length;
-  const pendentes  = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
-  const pctGeral   = total > 0 ? Math.round(etapasStatus.filter(e=>!e.isNA).reduce((a,e) => a + (e.pct||0), 0) / (total * 100) * 100) : 0;
+  const total       = etapasStatus.filter(e => !e.isNA).length;
+  const concluidas  = etapasStatus.filter(e => e.realizado && !e.isNA).length;
+  const emAndamento = etapasStatus.filter(e => e.status === 'Em Andamento').length;
+  const atrasadas   = etapasStatus.filter(e => e.status === 'Atrasado').length;
+  const conclAtraso = etapasStatus.filter(e => e.status === 'Concluído c/ Atraso').length;
+  const antecipadas = etapasStatus.filter(e => e.status === 'Antecipado').length;
+  const pendentes   = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
+  const pctGeral    = total > 0 ? Math.round(etapasStatus.filter(e=>!e.isNA).reduce((a,e) => a + (e.pct||0), 0) / (total * 100) * 100) : 0;
 
-  // Atualiza KPIs
-  const kpis = dashEl.querySelectorAll('.fdash-kpi-val');
-  if (kpis.length >= 5) {
-    kpis[0].textContent = total;
-    kpis[1].textContent = concluidas;
-    kpis[2].textContent = atrasadas;
-    kpis[3].textContent = antecipadas;
-    kpis[4].textContent = pendentes;
+  // Atualiza KPIs — re-renderiza todo o bloco de KPIs para refletir novo status
+  const kpisBlock = dashEl.querySelector('.fdash-kpis');
+  if (kpisBlock) {
+    const vals = kpisBlock.querySelectorAll('.fdash-kpi-val');
+    // Índices: 0=total, 1=concluidas, 2=emAndamento, 3=atrasadas, 4=conclAtraso, 5=pendentes
+    if (vals[0]) vals[0].textContent = total;
+    if (vals[1]) vals[1].textContent = concluidas;
+    if (vals[2]) vals[2].textContent = emAndamento;
+    if (vals[3]) vals[3].textContent = atrasadas;
+    if (vals[4]) vals[4].textContent = conclAtraso;
+    if (vals[5]) vals[5].textContent = pendentes;
   }
 
   // Atualiza barra de progresso
@@ -3473,8 +3483,8 @@ function atualizarDashboardFluxo(p) {
   // Atualiza rodapé da barra
   const barFooter = dashEl.querySelectorAll('.fdash-progress-block > div:last-child span');
   if (barFooter.length >= 2) {
-    barFooter[0].textContent = `${concluidas} de ${total} atividades concluídas`;
-    barFooter[1].textContent = atrasadas > 0 ? `⚠ ${atrasadas} atrasada${atrasadas>1?'s':''}` : '✓ Sem atrasos';
+    barFooter[0].textContent = `${concluidas} de ${total} atividades concluídas${conclAtraso > 0 ? ` · ${conclAtraso} c/ atraso` : ''}`;
+    barFooter[1].textContent = atrasadas > 0 ? `⚠ ${atrasadas} em aberto e atrasada${atrasadas>1?'s':''}` : '✓ Sem atrasos em aberto';
   }
 
   // Reconstrói kanban e timeline (são dinâmicos e seguros de reconstruir)
@@ -3483,10 +3493,12 @@ function atualizarDashboardFluxo(p) {
 
   if (kanbanEl) {
     const kanbanCols = [
-      { key: 'Pendente',   label: 'Pendente / Aguardando', cor: 'var(--yellow)', icon: '⏳' },
-      { key: 'No Prazo',   label: 'No Prazo',              cor: 'var(--green)',  icon: '✅' },
-      { key: 'Atrasado',   label: 'Atrasado',              cor: 'var(--red)',    icon: '🔴' },
-      { key: 'Antecipado', label: 'Antecipado',            cor: 'var(--accent)', icon: '⚡' },
+      { key: 'Pendente',            label: 'Pendente / Aguardando', cor: 'var(--yellow)', icon: '⏳' },
+      { key: 'Em Andamento',        label: 'Em Andamento',          cor: 'var(--accent)', icon: '🔄' },
+      { key: 'No Prazo',            label: 'No Prazo',              cor: 'var(--green)',  icon: '✅' },
+      { key: 'Atrasado',            label: 'Atrasado (Em Aberto)',  cor: 'var(--red)',    icon: '🔴' },
+      { key: 'Concluído c/ Atraso', label: 'Concluído c/ Atraso',  cor: '#ff9800',       icon: '⚠️' },
+      { key: 'Antecipado',          label: 'Antecipado',            cor: 'var(--accent)', icon: '⚡' },
     ];
     kanbanEl.innerHTML = kanbanCols.map(col => {
       const items = etapasStatus.filter(e => e.status === col.key || (col.key === 'Pendente' && e.status === 'Sem Data'));
