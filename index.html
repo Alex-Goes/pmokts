@@ -1864,15 +1864,15 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
           </div>
           <div style="width:1px;height:22px;background:var(--border)"></div>
           <div class="gg-filter-label">Projetos:</div>
-          <!-- Dropdown de projetos -->
-          <div style="position:relative" id="gg-dropdown-wrap">
+          <!-- Dropdown de projetos — alinhado à direita para não sair da tela -->
+          <div style="position:relative;margin-left:auto" id="gg-dropdown-wrap">
             <button class="gg-zoom-btn" onclick="toggleGanttDropdown()" id="gg-dropdown-btn"
               style="display:flex;align-items:center;gap:6px;padding:5px 12px">
               <span id="gg-dropdown-label">Todos</span>
               <span style="font-size:10px;opacity:.6">▾</span>
             </button>
-            <div id="gg-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;
-              min-width:260px;background:var(--panel);border:1px solid var(--border2);
+            <div id="gg-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);right:0;
+              min-width:280px;max-width:340px;background:var(--panel);border:1px solid var(--border2);
               border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;overflow:hidden">
               <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:6px">
                 <button class="btn btn-ghost" onclick="ggSelectAll()" style="font-size:10px;padding:3px 8px;flex:1">✅ Todos</button>
