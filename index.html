@@ -2380,17 +2380,36 @@ function renderSidebar() {
 
 /**
  * calcFluxoPct — percentual de avanço do FLUXO DO PROJETO
- * Conta quantas das 10 atividades macro têm data realizada preenchida.
- * Independe das etapas de execução.
+ * Considera:
+ * - Atividades com data realizada = 100%
+ * - Atividades com % parcial (cronoPct) = valor parcial
+ * - Atividades N/A = excluídas do total
  */
 function calcFluxoPct(proj) {
-  const rc  = proj.cronoRealizado || {};
-  const na  = proj.cronoNA || {};
+  const rc       = proj.cronoRealizado || {};
+  const na       = proj.cronoNA        || {};
+  const cronoPct = proj.cronoPct       || {};
+
   const aplicaveis = CRONO_LINHAS.filter(l => !na[l[0]]);
   const total = aplicaveis.length;
   if (!total) return 0;
-  const realizadas = aplicaveis.filter(l => !!rc[l[1]]).length;
-  return Math.round((realizadas / total) * 100);
+
+  let somaTotal = 0;
+  aplicaveis.forEach(l => {
+    const [chaveCalc, chaveReal] = l;
+    const hasPct = !!l[6]; // índice 6 = hasPct flag
+
+    if (rc[chaveReal]) {
+      // Atividade realizada = 100%
+      somaTotal += 100;
+    } else if (hasPct && cronoPct[chaveCalc] !== undefined) {
+      // Atividade com % parcial
+      somaTotal += Math.min(100, Math.max(0, parseInt(cronoPct[chaveCalc]) || 0));
+    }
+    // Sem realizado e sem % = 0 (não soma nada)
+  });
+
+  return Math.round(somaTotal / total);
 }
 
 /**
