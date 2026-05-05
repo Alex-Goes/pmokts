@@ -3751,6 +3751,11 @@ function bindFluxoEventos(p) {
       if (crono.terminoProj) p.termino = crono.terminoProj;
     }
     save();
+    // Sync Supabase com debounce (evita spam ao digitar)
+    if (mudou) {
+      clearTimeout(window._saveDebounce);
+      window._saveDebounce = setTimeout(() => saveAsync(projId), 1200);
+    }
 
     // Atualiza células de "Previsto" na tabela — respeita overrides manuais
     const overrides = p.cronoOverride || {};
@@ -3822,7 +3827,7 @@ function bindFluxoEventos(p) {
           if (dotEl)   { dotEl.classList.remove('visible'); }
           if (resetBtn){ resetBtn.style.opacity=''; resetBtn.style.pointerEvents=''; resetBtn.style.color=''; }
         }
-        save();
+        saveAsync(projId);
         // Recalcula delta com nova data prevista
         if (deltaEl && realEl) atualizarDelta(deltaEl, newVal, realEl.value);
         atualizarDashboardFluxo(p);
@@ -3835,11 +3840,10 @@ function bindFluxoEventos(p) {
     realEl.addEventListener('change', () => {
       if (!p.cronoRealizado) p.cronoRealizado = {};
       p.cronoRealizado[chaveReal] = realEl.value;
-      save();
-      // Usa o previsto atual do input (pode ser override manual OU calculado)
       const prevData = prevInputEl ? prevInputEl.value : ((p.crono||{})[chaveCalc]||'');
       atualizarDelta(deltaEl, prevData, realEl.value);
       atualizarDashboardFluxo(p);
+      saveAsync(projId);
       toast('📅 Data realizada salva!', 1500);
     });
   });
@@ -3887,7 +3891,7 @@ function resetPrevisto(i) {
 
   // Remove override
   if (p.cronoOverride) delete p.cronoOverride[chaveCalc];
-  save();
+  saveAsync(projId);
 
   // Restaura o valor calculado no input
   const calcVal = (p.crono || {})[chaveCalc] || '';
