@@ -1928,7 +1928,7 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
       </div>
 
       <div class="tabs">
-        <div class="tab active" data-tab="lista" onclick="switchTab('lista')">📋 Lista</div>
+        <div class="tab active" data-tab="lista" onclick="switchTab('lista')">📋 Execução</div>
         <div class="tab" data-tab="kanban" onclick="switchTab('kanban')">📌 Kanban</div>
         <div class="tab" data-tab="gantt" onclick="switchTab('gantt')">📊 Cronograma</div>
         <div class="tab" data-tab="fluxo" onclick="switchTab('fluxo')" style="color:var(--yellow)">⚡ Fluxo do Projeto</div>
@@ -2541,7 +2541,7 @@ function renderTab() {
   if (!p) return;
   if (currentTab === 'lista') el.innerHTML = renderLista(p);
   else if (currentTab === 'kanban') el.innerHTML = renderKanban(p);
-  else if (currentTab === 'gantt') el.innerHTML = renderGantt(p);
+  else if (currentTab === 'gantt') el.innerHTML = renderGanttExecucao(p);
   else if (currentTab === 'fluxo') {
     // rAF garante que o browser renderiza o frame atual antes de executar renderFluxo pesado
     requestAnimationFrame(() => {
@@ -5837,6 +5837,237 @@ function ciclaPrio(idx) {
 // ═══════════════════════════════════════════════════════════════════
 // GANTT — renderiza gráfico de barras temporal
 // ═══════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════
+// GANTT DE EXECUÇÃO — Gantt das etapas da aba Execução
+// ═══════════════════════════════════════════════════════════════════
+function renderGanttExecucao(p) {
+  const etapas = (p.etapas || []).filter(e => !e.na);
+  const hoje   = new Date().toISOString().split('T')[0];
+  const meses  = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  if (!etapas.length) return `<div style="text-align:center;padding:60px 20px;color:var(--text3);font-size:14px">
+    📋 Nenhuma etapa cadastrada.<br>
+    <span style="font-size:12px;margin-top:8px;display:block">Adicione etapas na aba <b>Execução</b> com datas de início e término para visualizar o cronograma.</span>
+  </div>`;
+
+  // Coleta datas
+  const todasDatas = [];
+  etapas.forEach(e => {
+    if (e.inicio)  todasDatas.push(e.inicio);
+    if (e.termino) todasDatas.push(e.termino);
+  });
+  todasDatas.push(hoje);
+
+  // Sem nenhuma data preenchida nas etapas
+  const temDatas = etapas.some(e => e.inicio || e.termino);
+  if (!temDatas) return `<div style="text-align:center;padding:60px 20px;color:var(--text3);font-size:14px">
+    📅 Etapas sem datas.<br>
+    <span style="font-size:12px;margin-top:8px;display:block">Edite as etapas na aba <b>Execução</b> e preencha as datas de início e término.</span>
+  </div>`;
+
+  const dMin = todasDatas.reduce((a,b) => a<b?a:b);
+  const dMax = todasDatas.reduce((a,b) => a>b?a:b);
+  const dtMin = new Date(dMin+'T00:00:00'); dtMin.setDate(dtMin.getDate()-2);
+  const dtMax = new Date(dMax+'T00:00:00'); dtMax.setDate(dtMax.getDate()+5);
+
+  const dias = [];
+  const cur  = new Date(dtMin);
+  while (cur <= dtMax) { dias.push(cur.toISOString().split('T')[0]); cur.setDate(cur.getDate()+1); }
+  const totalDias = dias.length;
+  const CELL_W    = Math.max(16, Math.min(30, Math.floor(1100/totalDias)));
+
+  const dayPos = d => {
+    if (!d) return -1;
+    return Math.round((new Date(d+'T00:00:00') - dtMin) / 86400000) * CELL_W;
+  };
+
+  // Cabeçalho de meses
+  let mesAtual = null, mesStart = 0, mesCount = 0;
+  const mesBlocks = [];
+  dias.forEach((d,i) => {
+    const dt  = new Date(d+'T00:00:00');
+    const key = `${dt.getFullYear()}-${dt.getMonth()}`;
+    if (key !== mesAtual) {
+      if (mesAtual !== null) mesBlocks[mesBlocks.length-1].count = mesCount;
+      mesAtual = key; mesStart = i; mesCount = 1;
+      mesBlocks.push({ label: `${meses[dt.getMonth()]} ${dt.getFullYear()}`, idx: i, count: 1 });
+    } else { mesCount++; if (mesBlocks.length) mesBlocks[mesBlocks.length-1].count = mesCount; }
+  });
+
+  const mesHeaderHTML = mesBlocks.map(m =>
+    `<div style="flex-shrink:0;width:${m.count*CELL_W}px;padding:3px 6px;border-right:1px solid var(--border);
+      font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;color:var(--accent);
+      overflow:hidden;white-space:nowrap">${m.label}</div>`
+  ).join('');
+
+  const diaHeaderHTML = dias.map(d => {
+    const dt  = new Date(d+'T00:00:00');
+    const dow = dt.getDay();
+    const isWE = dow===0||dow===6;
+    const isT  = d===hoje;
+    const bg   = isT ? 'rgba(255,23,68,.1)' : isWE ? 'rgba(255,255,255,.02)' : '';
+    const col  = isT ? 'var(--red)' : isWE ? 'rgba(255,255,255,.2)' : 'var(--text3)';
+    return `<div style="flex-shrink:0;width:${CELL_W}px;text-align:center;border-right:1px solid rgba(37,45,64,.4);
+      font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;color:${col};
+      padding:4px 0;background:${bg}">${dt.getDate()}</div>`;
+  }).join('');
+
+  const hojeLeft   = dayPos(hoje);
+  const barAreaW   = totalDias * CELL_W;
+  const LABEL_W    = 220;
+
+  // Cores por status
+  const COR_STATUS = {
+    'Concluído':    '#00e676',
+    'Em andamento': '#00d4ff',
+    'Atrasado':     '#ff1744',
+    'Pendente':     '#ffd600',
+  };
+
+  const linhas = etapas.map((e, idx) => {
+    const cor    = COR_STATUS[e.status] || 'var(--accent2)';
+    const pct    = parseInt(e.pct) || 0;
+    const ini    = e.inicio  || '';
+    const fin    = e.termino || '';
+
+    let barHTML = '';
+    if (ini && fin) {
+      const left = dayPos(ini);
+      const right= dayPos(fin) + CELL_W;
+      const w    = Math.max(CELL_W, right - left);
+      // Barra fundo
+      barHTML += `<div style="position:absolute;height:18px;top:50%;transform:translateY(-50%);
+        left:${left}px;width:${w}px;background:${cor}30;border-radius:4px"></div>`;
+      // Barra progresso
+      const pw = Math.max(4, Math.round(w * pct/100));
+      barHTML += `<div style="position:absolute;height:18px;top:50%;transform:translateY(-50%);
+        left:${left}px;width:${pw}px;background:${cor};border-radius:4px;
+        display:flex;align-items:center;justify-content:center;overflow:hidden;
+        font-size:10px;font-weight:700;color:#fff;font-family:'Barlow Condensed',sans-serif"
+        title="${e.nome} — ${pct}%">
+        ${pw > 30 ? pct+'%' : ''}
+      </div>`;
+    } else if (ini) {
+      // Só início — marco
+      const left = dayPos(ini);
+      barHTML += `<div style="position:absolute;width:12px;height:12px;top:50%;
+        transform:translateY(-50%) rotate(45deg);left:${left}px;background:${cor};
+        border-radius:2px" title="${e.nome} — sem término"></div>`;
+    }
+
+    return `<div style="display:flex;border-bottom:1px solid rgba(37,45,64,.4);min-height:44px">
+      <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;padding:6px 12px;
+        border-right:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <div style="width:3px;height:28px;border-radius:2px;background:${cor};flex-shrink:0"></div>
+        <div style="min-width:0;flex:1">
+          <div style="font-size:12px;font-weight:600;color:${cor};
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${idx+1}. ${e.nome}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap">
+            ${e.resp ? `<span>👤 ${e.resp}</span>` : ''}
+            <span style="color:${cor}">${e.status||'Pendente'}</span>
+            <span>${ini ? fmtDate(ini) : '?'} → ${fin ? fmtDate(fin) : '?'}</span>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:${cor};flex-shrink:0">${pct}%</div>
+      </div>
+      <div style="flex:1;position:relative;min-width:${barAreaW}px;overflow:hidden">
+        <!-- Fins de semana -->
+        ${dias.map((d,i) => {
+          const dow = new Date(d+'T00:00:00').getDay();
+          return (dow===0||dow===6) ? `<div style="position:absolute;top:0;bottom:0;left:${i*CELL_W}px;width:${CELL_W}px;background:rgba(255,255,255,.02)"></div>` : '';
+        }).join('')}
+        <!-- Linha de hoje -->
+        <div style="position:absolute;top:0;bottom:0;left:${hojeLeft}px;width:2px;background:var(--red);z-index:5"></div>
+        ${barHTML}
+      </div>
+    </div>`;
+  }).join('');
+
+  // KPIs
+  const total     = etapas.length;
+  const concl     = etapas.filter(e=>e.status==='Concluído').length;
+  const emAnd     = etapas.filter(e=>e.status==='Em andamento').length;
+  const atras     = etapas.filter(e=>e.status==='Atrasado').length;
+  const pend      = etapas.filter(e=>e.status==='Pendente').length;
+  const pctGeral  = total ? Math.round(etapas.reduce((s,e)=>s+(parseInt(e.pct)||0),0)/total) : 0;
+
+  return `
+    <div style="padding:0 0 16px 0">
+      <!-- KPIs compactos -->
+      <div style="display:flex;gap:10px;padding:12px 16px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 16px;text-align:center;min-width:70px">
+          <div style="font-size:20px;font-weight:800;color:var(--text)">${total}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Total</div>
+        </div>
+        <div style="background:var(--card);border:1px solid rgba(0,230,118,.3);border-radius:8px;padding:8px 16px;text-align:center;min-width:70px">
+          <div style="font-size:20px;font-weight:800;color:var(--green)">${concl}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Concluídas</div>
+        </div>
+        <div style="background:var(--card);border:1px solid rgba(0,212,255,.3);border-radius:8px;padding:8px 16px;text-align:center;min-width:70px">
+          <div style="font-size:20px;font-weight:800;color:var(--accent)">${emAnd}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Em Andamento</div>
+        </div>
+        <div style="background:var(--card);border:1px solid rgba(255,23,68,.3);border-radius:8px;padding:8px 16px;text-align:center;min-width:70px">
+          <div style="font-size:20px;font-weight:800;color:var(--red)">${atras}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Atrasadas</div>
+        </div>
+        <div style="background:var(--card);border:1px solid rgba(255,214,0,.3);border-radius:8px;padding:8px 16px;text-align:center;min-width:70px">
+          <div style="font-size:20px;font-weight:800;color:var(--yellow)">${pend}</div>
+          <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Pendentes</div>
+        </div>
+        <div style="flex:1;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 16px;display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <div style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pctGeral}%;background:${pctGeral===100?'var(--green)':pctGeral>60?'var(--accent)':'var(--yellow)'};border-radius:3px;transition:width .3s"></div>
+            </div>
+          </div>
+          <div style="font-size:18px;font-weight:800;color:var(--accent);flex-shrink:0">${pctGeral}%</div>
+        </div>
+      </div>
+      <!-- Gantt -->
+      <div style="overflow-x:auto;margin:0">
+        <div style="min-width:${LABEL_W + barAreaW}px">
+          <!-- Header meses -->
+          <div style="display:flex;background:var(--bg2);border-bottom:1px solid var(--border)">
+            <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;border-right:1px solid var(--border);
+              padding:4px 12px;font-size:10px;font-weight:700;color:var(--text3);
+              font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:.8px">
+              Etapa
+            </div>
+            <div style="display:flex">${mesHeaderHTML}</div>
+          </div>
+          <!-- Header dias -->
+          <div style="display:flex;background:var(--bg);border-bottom:2px solid var(--border)">
+            <div style="width:${LABEL_W}px;min-width:${LABEL_W}px;border-right:1px solid var(--border)"></div>
+            <div style="display:flex">${diaHeaderHTML}</div>
+          </div>
+          <!-- Linhas -->
+          ${linhas}
+        </div>
+      </div>
+      <!-- Legenda -->
+      <div style="display:flex;gap:14px;flex-wrap:wrap;padding:8px 16px;
+        border-top:1px solid var(--border);font-size:10px;color:var(--text3);
+        font-family:'Barlow Condensed',sans-serif">
+        <span style="display:flex;align-items:center;gap:5px">
+          <span style="width:12px;height:8px;background:#00e676;border-radius:2px;display:inline-block"></span>Concluído
+        </span>
+        <span style="display:flex;align-items:center;gap:5px">
+          <span style="width:12px;height:8px;background:#00d4ff;border-radius:2px;display:inline-block"></span>Em Andamento
+        </span>
+        <span style="display:flex;align-items:center;gap:5px">
+          <span style="width:12px;height:8px;background:#ff1744;border-radius:2px;display:inline-block"></span>Atrasado
+        </span>
+        <span style="display:flex;align-items:center;gap:5px">
+          <span style="width:12px;height:8px;background:#ffd600;border-radius:2px;display:inline-block"></span>Pendente
+        </span>
+        <span style="display:flex;align-items:center;gap:5px">
+          <span style="width:2px;height:12px;background:var(--red);display:inline-block"></span>Hoje
+        </span>
+      </div>
+    </div>`;
+}
 
 function renderGantt(etapasStatus, p) {
   // Guard: garante que etapasStatus é um array válido
