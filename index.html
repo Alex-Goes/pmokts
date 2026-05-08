@@ -1513,6 +1513,12 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
 .gg-legend-item { display: flex; align-items: center; gap: 5px; }
 .gg-legend-dot { width: 12px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
+/* ─── PERFORMANCE ─── */
+/* Evita re-paint de elementos fora da viewport */
+.proj-item { content-visibility: auto; contain-intrinsic-size: 0 72px; }
+.dg-resp-section { content-visibility: auto; contain-intrinsic-size: 0 200px; }
+.fdash-kpi { contain: layout style; }
+
 /* ─── PRINT ─── */
 @media print {
   .topbar, .sidebar, .tabs, .proj-actions, .topbar-actions, .btn { display: none !important; }
@@ -2386,26 +2392,42 @@ const fmt = fmtDate;
 // ═══════════════════════════════════════
 // SIDEBAR
 // ═══════════════════════════════════════
+function _buildSidebarItemHTML(p) {
+  const pct   = calcFluxoPct(p);
+  const color = pct === 100 ? 'var(--green)' : pct > 60 ? 'var(--accent)' : pct > 30 ? 'var(--yellow)' : 'var(--accent2)';
+  const titulo = p.proposta || p.nome || '—';
+  const subtit = p.nome || '—';
+  return `<div class="proj-item ${p.id===projId?'active':''}" onclick="openProjeto('${p.id}')">
+    <div class="proj-item-name">${titulo}</div>
+    <div class="proj-item-meta">
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${subtit}</span>
+      <span style="margin-left:auto;font-weight:600;color:${color};flex-shrink:0">${pct}%</span>
+    </div>
+    <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+  </div>`;
+}
+
 function renderSidebar() {
   const el = document.getElementById('proj-list');
   if (!db.projetos.length) {
     el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Nenhum projeto ainda</div>`;
     return;
   }
-  el.innerHTML = db.projetos.map(p => {
-    const pct   = calcFluxoPct(p);  // barra = avanço do fluxo
-    const color = pct === 100 ? 'var(--green)' : pct > 60 ? 'var(--accent)' : pct > 30 ? 'var(--yellow)' : 'var(--accent2)';
-    const titulo = p.proposta || p.nome || '—'; // linha 1: Nº PRP
-    const subtit = p.nome || '—';               // linha 2: Nome do Projeto
-    return `<div class="proj-item ${p.id===projId?'active':''}" onclick="openProjeto('${p.id}')">
-      <div class="proj-item-name">${titulo}</div>
-      <div class="proj-item-meta">
-        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${subtit}</span>
-        <span style="margin-left:auto;font-weight:600;color:${color};flex-shrink:0">${pct}%</span>
-      </div>
-      <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%;background:${color}"></div></div>
-    </div>`;
-  }).join('');
+  el.innerHTML = db.projetos.map(_buildSidebarItemHTML).join('');
+}
+
+// Atualiza apenas 1 item da sidebar em vez de re-renderizar tudo
+function updateSidebarItem(id) {
+  const p = db.projetos.find(x => x.id === id);
+  if (!p) return;
+  const existing = document.querySelector(`#proj-list .proj-item[onclick="openProjeto('${id}')"]`);
+  if (existing) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = _buildSidebarItemHTML(p);
+    existing.replaceWith(tmp.firstElementChild);
+  } else {
+    renderSidebar();
+  }
 }
 
 // ═══════════════════════════════════════
@@ -2419,7 +2441,13 @@ function renderSidebar() {
  * - Atividades com % parcial (cronoPct) = valor parcial
  * - Atividades N/A = excluídas do total
  */
+// Cache de calcFluxoPct por projeto (key = id + _updatedAt)
+const _fluxoPctCache = {};
 function calcFluxoPct(proj) {
+  // Usa _updatedAt como chave de cache — invalida automaticamente ao salvar
+  const cacheKey = proj.id + '|' + (proj._updatedAt || '0');
+  if (_fluxoPctCache[cacheKey] !== undefined) return _fluxoPctCache[cacheKey];
+
   const rc       = proj.cronoRealizado || {};
   const na       = proj.cronoNA        || {};
   const cronoPct = proj.cronoPct       || {};
@@ -2431,19 +2459,20 @@ function calcFluxoPct(proj) {
   let somaTotal = 0;
   aplicaveis.forEach(l => {
     const [chaveCalc, chaveReal] = l;
-    const hasPct = !!l[6]; // índice 6 = hasPct flag
-
+    const hasPct = !!l[6];
     if (rc[chaveReal]) {
-      // Atividade realizada = 100%
       somaTotal += 100;
     } else if (hasPct && cronoPct[chaveCalc] !== undefined) {
-      // Atividade com % parcial
       somaTotal += Math.min(100, Math.max(0, parseInt(cronoPct[chaveCalc]) || 0));
     }
-    // Sem realizado e sem % = 0 (não soma nada)
   });
 
-  return Math.round(somaTotal / total);
+  const result = Math.round(somaTotal / total);
+  _fluxoPctCache[cacheKey] = result;
+  // Limita tamanho do cache a 200 entradas
+  const keys = Object.keys(_fluxoPctCache);
+  if (keys.length > 200) delete _fluxoPctCache[keys[0]];
+  return result;
 }
 
 /**
@@ -2506,15 +2535,7 @@ function switchTab(tab) {
 }
 
 function renderTab() {
-  // Sempre re-lê o db do localStorage antes de renderizar — garante dados frescos
-  // mesmo que alguma operação tenha persistido sem atualizar o objeto em memória
-  const dbFresh = JSON.parse(localStorage.getItem('gestorpro_db') || '{"projetos":[]}');
-  // Sincroniza o objeto em memória com o localStorage (merge não-destrutivo)
-  dbFresh.projetos.forEach(proj => {
-    const idx = db.projetos.findIndex(p => p.id === proj.id);
-    if (idx >= 0) db.projetos[idx] = proj;
-  });
-
+  // db em memória é sempre a fonte da verdade (save() já sincroniza com localStorage)
   const p = getProjeto();
   const el = document.getElementById('tab-content');
   if (!p) return;
@@ -2522,8 +2543,12 @@ function renderTab() {
   else if (currentTab === 'kanban') el.innerHTML = renderKanban(p);
   else if (currentTab === 'gantt') el.innerHTML = renderGantt(p);
   else if (currentTab === 'fluxo') {
-    el.innerHTML = renderFluxo(p);
-    bindFluxoEventos(p);
+    // rAF garante que o browser renderiza o frame atual antes de executar renderFluxo pesado
+    requestAnimationFrame(() => {
+      el.innerHTML = renderFluxo(p);
+      bindFluxoEventos(p);
+    });
+    return; // retorna imediatamente, rAF executa depois
   }
   else if (currentTab === 'relatorio') el.innerHTML = renderRelatorio(p);
 }
@@ -3008,7 +3033,11 @@ function pascoa(y) {
   return new Date(y, mes-1, dia);
 }
 
+// Cache de feriados por ano para evitar recriar o Set a cada chamada
+const _holidaysCache = {};
+
 function getHolidays(ano) {
+  if (_holidaysCache[ano]) return _holidaysCache[ano];
   // Feriados nacionais fixos (data no formato MM-DD)
   const fixos = [
     '01-01', // Confraternização Universal
@@ -3045,7 +3074,13 @@ function getHolidays(ano) {
     ...customSet,
   ]);
 
+  _holidaysCache[ano] = set;
   return set;
+}
+
+// Limpa o cache ao adicionar/remover feriados personalizados
+function limparCacheFeriados() {
+  Object.keys(_holidaysCache).forEach(k => delete _holidaysCache[k]);
 }
 
 // Feriados personalizados (salvos no localStorage)
@@ -3054,6 +3089,7 @@ function getCustomHolidays() {
 }
 function saveCustomHolidays(list) {
   localStorage.setItem('pmokts_holidays', JSON.stringify(list));
+  limparCacheFeriados(); // invalida cache para recalcular com novos feriados
 }
 
 /**
@@ -3598,7 +3634,13 @@ function renderFluxo(p) {
  * Regenera apenas o bloco .fluxo-dash (KPIs, progresso, kanban, timeline)
  * sem recriar os inputs — preserva foco e valores digitados.
  */
+// Debounced para evitar múltiplos re-renders em sequência rápida
+let _dashFluxoTimer = null;
 function atualizarDashboardFluxo(p) {
+  clearTimeout(_dashFluxoTimer);
+  _dashFluxoTimer = setTimeout(() => _atualizarDashboardFluxoImpl(p), 120);
+}
+function _atualizarDashboardFluxoImpl(p) {
   const dashEl = document.querySelector('.fluxo-dash');
   if (!dashEl) return;
 
@@ -3810,11 +3852,14 @@ function bindFluxoEventos(p) {
   }
 
   // oninput = dispara a CADA tecla/mudança (inclusive no picker de data)
-  aprovEl.addEventListener('input',  recalcularAoVivo);
-  aprovEl.addEventListener('change', recalcularAoVivo); // fallback para alguns browsers
-  tapEl.addEventListener('input',    recalcularAoVivo);
+  // Debounce 400ms — evita recalcular a cada tecla
+  let _recalcTimer = null;
+  const recalcDebounced = () => { clearTimeout(_recalcTimer); _recalcTimer = setTimeout(recalcularAoVivo, 400); };
+  aprovEl.addEventListener('input',  recalcDebounced);
+  aprovEl.addEventListener('change', recalcularAoVivo);
+  tapEl.addEventListener('input',    recalcDebounced);
   tapEl.addEventListener('change',   recalcularAoVivo);
-  diasEl.addEventListener('input',   recalcularAoVivo);
+  diasEl.addEventListener('input',   recalcDebounced);
   diasEl.addEventListener('change',  recalcularAoVivo);
 
   // Bind dos campos de texto (salva ao sair do campo, sem re-render)
@@ -5621,6 +5666,9 @@ async function salvarPct(i, valor) {
   if (!p.cronoPct) p.cronoPct = {};
   p.cronoPct[chaveCalc] = pct;
 
+  // Atualiza sidebar item (sem re-renderizar toda a lista)
+  updateSidebarItem(projId);
+
   // Se 100% e ainda sem data realizada → preenche realizado com hoje
   if (pct === 100 && !(p.cronoRealizado && p.cronoRealizado[chaveReal])) {
     const hoje = new Date().toISOString().split('T')[0];
@@ -6327,10 +6375,13 @@ function renderGanttGlobal() {
 /**
  * Define o filtro de status para uma seção de responsável e re-renderiza o Dashboard Global
  */
+let _dgRenderTimer = null;
 function dgSetStatusFiltro(uid, status) {
   if (!window.dgFiltroStatus) window.dgFiltroStatus = {};
   window.dgFiltroStatus[uid] = status || null;
-  renderDashboardGlobal();
+  // Debounce para evitar re-render duplo em cliques rápidos
+  clearTimeout(_dgRenderTimer);
+  _dgRenderTimer = setTimeout(() => renderDashboardGlobal(), 80);
 }
 
 /**
