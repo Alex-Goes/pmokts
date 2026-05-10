@@ -3737,9 +3737,8 @@ function _atualizarDashboardFluxoImpl(p) {
     barFooter[1].textContent = atrasadas > 0 ? `⚠ ${atrasadas} em aberto e atrasada${atrasadas>1?'s':''}` : '✓ Sem atrasos em aberto';
   }
 
-  // Reconstrói kanban e timeline (são dinâmicos e seguros de reconstruir)
+  // Reconstrói kanban e Gantt (são dinâmicos e seguros de reconstruir)
   const kanbanEl = dashEl.querySelector('.fdash-kanban');
-  const tlRowsEl = dashEl.querySelector('.fdash-tl-rows');
 
   if (kanbanEl) {
     const kanbanCols = [
@@ -3782,12 +3781,10 @@ function _atualizarDashboardFluxoImpl(p) {
     }).join('');
   }
 
-  if (tlRowsEl) {
-    // Re-renderiza o Gantt completo
-    const ganttWrap = dashEl.querySelector('.fdash-timeline');
-    if (ganttWrap) {
-      ganttWrap.innerHTML = `<div class="fdash-tl-title">📊 Gantt — Previsto vs Realizado</div>${renderGantt(etapasStatus, p)}`;
-    }
+  // Re-renderiza o Gantt sempre (tlRowsEl era da antiga linha do tempo, removida)
+  const ganttWrap = dashEl.querySelector('.fdash-timeline');
+  if (ganttWrap) {
+    ganttWrap.innerHTML = `<div class="fdash-tl-title">📊 Gantt — Previsto vs Realizado</div>${renderGantt(etapasStatus, p)}`;
   }
 }
 
