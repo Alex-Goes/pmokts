@@ -1949,10 +1949,8 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
       </div>
 
       <div class="tabs">
-        <div class="tab active" data-tab="lista" onclick="switchTab('lista')">📋 Execução</div>
-        <div class="tab" data-tab="kanban" onclick="switchTab('kanban')">📌 Kanban</div>
+        <div class="tab active" data-tab="fluxo" onclick="switchTab('fluxo')" style="color:var(--yellow)">⚡ Fluxo do Projeto</div>
         <div class="tab" data-tab="gantt" onclick="switchTab('gantt')">📊 Cronograma</div>
-        <div class="tab" data-tab="fluxo" onclick="switchTab('fluxo')" style="color:var(--yellow)">⚡ Fluxo do Projeto</div>
         <div class="tab" data-tab="relatorio" onclick="switchTab('relatorio')">📄 Relatório</div>
       </div>
 
@@ -2354,7 +2352,7 @@ function saveUsers(users) {
   if (SUPA_OK) users.forEach(u => supaSalvarUsuario(u));
 }
 let projId = null;
-let currentTab = 'lista';
+let currentTab = 'fluxo';
 let etapaEditId = null;
 
 // Templates padrão (fallback)
@@ -2423,17 +2421,27 @@ const fmt = fmtDate;
 // SIDEBAR
 // ═══════════════════════════════════════
 function _buildSidebarItemHTML(p) {
-  const pct   = calcFluxoPct(p);
-  const color = pct === 100 ? 'var(--green)' : pct > 60 ? 'var(--accent)' : pct > 30 ? 'var(--yellow)' : 'var(--accent2)';
-  const titulo = p.proposta || p.nome || '—';
-  const subtit = p.nome || '—';
+  const pctPlan = calcFluxoPctFase(p, 'planejamento');
+  const pctEnc  = calcFluxoPctFase(p, 'encerramento');
+  const corPlan = pctPlan === 100 ? 'var(--green)' : pctPlan > 60 ? '#0066ff' : pctPlan > 30 ? 'var(--yellow)' : 'var(--accent2)';
+  const corEnc  = pctEnc  === 100 ? 'var(--green)' : pctEnc  > 60 ? '#00a870' : pctEnc  > 30 ? 'var(--yellow)' : 'var(--accent2)';
+  const titulo  = p.proposta || p.nome || '—';
+  const subtit  = p.nome || '—';
   return `<div class="proj-item ${p.id===projId?'active':''}" onclick="openProjeto('${p.id}')">
     <div class="proj-item-name">${titulo}</div>
-    <div class="proj-item-meta">
-      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px">${subtit}</span>
-      <span style="margin-left:auto;font-weight:600;color:${color};flex-shrink:0">${pct}%</span>
+    <div class="proj-item-meta" style="margin-bottom:4px">
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px">${subtit}</span>
     </div>
-    <div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span style="font-size:8px;min-width:8px">🔵</span>
+      <div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:${pctPlan}%;background:${corPlan}"></div></div>
+      <span style="font-size:9px;font-weight:700;color:${corPlan};min-width:26px;text-align:right">${pctPlan}%</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
+      <span style="font-size:8px;min-width:8px">🟢</span>
+      <div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:${pctEnc}%;background:${corEnc}"></div></div>
+      <span style="font-size:9px;font-weight:700;color:${corEnc};min-width:26px;text-align:right">${pctEnc}%</span>
+    </div>
   </div>`;
 }
 
@@ -3338,19 +3346,20 @@ function renderFluxo(p) {
     }
 
     return { i, icone, nome, previsto, realizado, delta, status, cor, bg, pct: pctSalvo, hasPct,
-             chaveCalc, chaveReal, isNA: false };
+             chaveCalc, chaveReal, isNA: false, fase };
   });
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────
-  const naoAplicaveis = etapasStatus.filter(e => e.isNA).length;
-  const total       = etapasStatus.filter(e => !e.isNA).length;
-  const concluidas  = etapasStatus.filter(e => e.realizado && !e.isNA).length;
-  const emAndamento = etapasStatus.filter(e => e.status === 'Em Andamento').length;
-  const atrasadas   = etapasStatus.filter(e => e.status === 'Atrasado').length;
-  const conclAtraso = etapasStatus.filter(e => e.status === 'Concluído c/ Atraso').length;
-  const antecipadas = etapasStatus.filter(e => e.status === 'Antecipado').length;
-  const pendentes   = etapasStatus.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
-  const pctGeral    = total > 0 ? Math.round(etapasStatus.filter(e=>!e.isNA).reduce((a,e) => a + (e.pct||0), 0) / (total * 100) * 100) : 0;
+  // ── KPIs — exclui fase execução (Início/Término gerenciados externamente) ──
+  const etapasVisiveis = etapasStatus.filter(e => e.fase !== 'execucao');
+  const naoAplicaveis = etapasVisiveis.filter(e => e.isNA).length;
+  const total       = etapasVisiveis.filter(e => !e.isNA).length;
+  const concluidas  = etapasVisiveis.filter(e => e.realizado && !e.isNA).length;
+  const emAndamento = etapasVisiveis.filter(e => e.status === 'Em Andamento').length;
+  const atrasadas   = etapasVisiveis.filter(e => e.status === 'Atrasado').length;
+  const conclAtraso = etapasVisiveis.filter(e => e.status === 'Concluído c/ Atraso').length;
+  const antecipadas = etapasVisiveis.filter(e => e.status === 'Antecipado').length;
+  const pendentes   = etapasVisiveis.filter(e => (e.status === 'Pendente' || e.status === 'Sem Data') && !e.isNA).length;
+  const pctGeral    = total > 0 ? Math.round(etapasVisiveis.filter(e=>!e.isNA).reduce((a,e) => a + (e.pct||0), 0) / (total * 100) * 100) : 0;
 
   // ── Kanban por status ─────────────────────────────────────────────────────
   const kanbanCols = [
@@ -3376,7 +3385,7 @@ function renderFluxo(p) {
   }
 
   const kanbanHTML = kanbanCols.map(col => {
-    const items = etapasStatus.filter(e => e.status === col.key || (col.key === 'Pendente' && e.status === 'Sem Data'));
+    const items = etapasStatus.filter(e => e.fase !== 'execucao' && (e.status === col.key || (col.key === 'Pendente' && e.status === 'Sem Data')));
     const cards = items.map(e => `
       <div class="fdash-card" style="border-left-color:${col.cor};">
         <div class="fdash-card-name">${e.icone} ${e.nome}</div>
@@ -3455,6 +3464,7 @@ function renderFluxo(p) {
     const histData = (p.cronoHist && p.cronoHist[chaveCalc]) || [];
     const respNome = respId ? ((getUsers().find(u=>u.id===respId)||{}).nome||respId).split(' ')[0] : '';
     const hasPct   = !!linha[6];
+    const fase     = linha[7] || 'planejamento';
     const pctVal   = hasPct ? ((p.cronoPct && p.cronoPct[chaveCalc] !== undefined) ? p.cronoPct[chaveCalc] : 0) : null;
     const pctColor = pctVal === 100 ? 'var(--green)' : pctVal >= 50 ? 'var(--accent)' : pctVal > 0 ? 'var(--yellow)' : 'var(--border2)';
 
@@ -3560,7 +3570,6 @@ function renderFluxo(p) {
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
           ${[
             { id:'planejamento', icon:'🔵', label:'Planejamento', cor:'#0066ff' },
-            { id:'execucao',     icon:'🚀', label:'Execução',     cor:'var(--accent)' },
             { id:'encerramento', icon:'🟢', label:'Encerramento', cor:'var(--green)' },
           ].map(f => {
             const pf = calcFluxoPctFase(p, f.id);
@@ -3576,6 +3585,19 @@ function renderFluxo(p) {
             </div>`;
           }).join('')}
         </div>
+        <!-- Execução: exibe só as datas, sem barra -->
+        <div style="background:var(--bg2);border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:8px 14px;margin-bottom:10px;
+          display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;color:var(--accent);text-transform:uppercase;letter-spacing:.8px">🚀 Execução em Campo</span>
+          <span style="font-size:11px;color:var(--text2)">
+            Início: <b style="color:var(--accent)">${crono.inicioProj ? fmtDate(crono.inicioProj) : '—'}</b>
+          </span>
+          <span style="font-size:11px;color:var(--text2)">
+            Término: <b style="color:var(--accent)">${crono.terminoProj ? fmtDate(crono.terminoProj) : '—'}</b>
+          </span>
+          ${p.dias ? `<span style="font-size:11px;color:var(--text3)">${p.dias} dias vendidos</span>` : ''}
+          <span style="font-size:10px;color:var(--text3);margin-left:auto;font-style:italic">Avanço gerenciado externamente</span>
+        </div>
         <div class="fdash-progress-header">
           <div class="fdash-progress-title">📊 Progresso Geral do Fluxo</div>
           <div class="fdash-progress-pct">${pctGeral}%</div>
@@ -3584,7 +3606,7 @@ function renderFluxo(p) {
           <div class="fdash-bar-fill" style="width:${pctGeral}%"></div>
         </div>
         <div class="fdash-bar-segments">
-          ${etapasStatus.map(e => {
+          ${etapasStatus.filter(e => e.fase !== 'execucao').map(e => {
             const barColor = e.isNA ? 'var(--border)' :
               e.realizado ? (e.delta===0?'var(--green)':e.delta>0?'var(--red)':'var(--accent)') :
               e.status==='Em Andamento' ? 'var(--accent)' :
@@ -3782,7 +3804,7 @@ function _atualizarDashboardFluxoImpl(p) {
       { key: 'Antecipado',          label: 'Antecipado',            cor: 'var(--accent)', icon: '⚡' },
     ];
     kanbanEl.innerHTML = kanbanCols.map(col => {
-      const items = etapasStatus.filter(e => e.status === col.key || (col.key === 'Pendente' && e.status === 'Sem Data'));
+      const items = etapasStatus.filter(e => e.fase !== 'execucao' && (e.status === col.key || (col.key === 'Pendente' && e.status === 'Sem Data')));
       const cards = items.map(e => {
         let dText = '';
         if (!e.realizado && e.status === 'Atrasado' && e.previsto) {
@@ -6123,6 +6145,7 @@ function renderGanttExecucao(p) {
 // RENDER FLUXO POR FASE — agrupa as linhas da tabela em 3 seções
 // ═══════════════════════════════════════════════════════════════════
 function renderLinhasFluxoPorFase(linhasHTML, etapasStatus, p, crono, overrides) {
+  // Mostra apenas Planejamento e Encerramento — Execução (Início/Término) é gerenciada externamente
   const FASES = [
     {
       id:    'planejamento',
@@ -6132,15 +6155,6 @@ function renderLinhasFluxoPorFase(linhasHTML, etapasStatus, p, crono, overrides)
       cor:   '#0066ff',
       bg:    'rgba(0,102,255,.06)',
       border:'rgba(0,102,255,.25)',
-    },
-    {
-      id:    'execucao',
-      icon:  '🚀',
-      label: 'Execução',
-      desc:  'Período de trabalho em campo',
-      cor:   'var(--accent)',
-      bg:    'rgba(0,212,255,.05)',
-      border:'rgba(0,212,255,.2)',
     },
     {
       id:    'encerramento',
