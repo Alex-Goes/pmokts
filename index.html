@@ -3323,8 +3323,8 @@ function renderFluxo(p) {
   // ── Calcular status de cada etapa (ignora N/A) ────────────────────────────
   const cronoNA = p.cronoNA || {};
   const etapasStatus = CRONO_LINHAS.map((linha, i) => {
-    const [chaveCalc, chaveReal, icone, nome,,, hasPct] = linha;
-    if (cronoNA[chaveCalc]) return { i, icone, nome, status: 'N/A', cor: 'var(--text3)', bg: 'rgba(255,255,255,.03)', previsto:'', realizado:'', delta:null, isNA:true, pct:0 };
+    const [chaveCalc, chaveReal, icone, nome,,, hasPct, fase] = linha;
+    if (cronoNA[chaveCalc]) return { i, icone, nome, status: 'N/A', cor: 'var(--text3)', bg: 'rgba(255,255,255,.03)', previsto:'', realizado:'', delta:null, isNA:true, pct:0, fase: fase||'planejamento' };
     const previsto  = overrides[chaveCalc] || crono[chaveCalc] || '';
     const realizado = rc[chaveReal] || '';
     const delta     = diffDias(previsto, realizado);
@@ -3346,7 +3346,7 @@ function renderFluxo(p) {
     }
 
     return { i, icone, nome, previsto, realizado, delta, status, cor, bg, pct: pctSalvo, hasPct,
-             chaveCalc, chaveReal, isNA: false, fase };
+             chaveCalc, chaveReal, isNA: false, fase: fase||'planejamento' };
   });
 
   // ── KPIs — exclui fase execução (Início/Término gerenciados externamente) ──
