@@ -29,6 +29,148 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── SIDEBAR INTELIGENTE — SEÇÕES ─── */
+.sb-section-label {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 10px 4px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.8px;
+  cursor: pointer; user-select: none;
+  border-radius: 4px; transition: background .15s;
+}
+.sb-section-label:hover { background: rgba(255,255,255,.03); }
+.sb-section-count {
+  font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 8px;
+  font-family: 'Barlow', sans-serif; letter-spacing: 0;
+}
+.sb-section-body { overflow: hidden; transition: max-height .3s ease; }
+.sb-section-body.collapsed { max-height: 0 !important; }
+
+/* Score badge */
+.proj-score {
+  font-size: 8px; font-weight: 700;
+  padding: 1px 4px; border-radius: 3px;
+  font-family: 'Barlow Condensed', sans-serif;
+  flex-shrink: 0;
+}
+.proj-score-crit { background: rgba(255,23,68,.2); color: var(--red); }
+.proj-score-alert{ background: rgba(255,214,0,.15); color: var(--yellow); }
+.proj-score-ok   { background: rgba(0,230,118,.12); color: var(--green); }
+.proj-score-done { background: rgba(255,255,255,.06); color: var(--text3); }
+
+/* Tags automáticas */
+.proj-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.proj-tag {
+  font-size: 8px; font-weight: 700; padding: 1px 5px;
+  border-radius: 3px; white-space: nowrap;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.ptag-crit { background: rgba(255,23,68,.18); color: var(--red); }
+.ptag-warn { background: rgba(255,214,0,.15); color: var(--yellow); }
+.ptag-info { background: rgba(0,102,255,.15); color: #6699ff; }
+.ptag-ok   { background: rgba(0,230,118,.12); color: var(--green); }
+.ptag-dim  { background: rgba(255,255,255,.06); color: var(--text3); }
+
+/* Borda esquerda por criticidade */
+.proj-item.prio-crit { border-left: 2px solid var(--red) !important; border-radius: 0 8px 8px 0; padding-left: 10px; }
+.proj-item.prio-alert{ border-left: 2px solid var(--yellow) !important; border-radius: 0 8px 8px 0; padding-left: 10px; }
+.proj-item.prio-apto { border-left: 2px solid var(--green) !important; border-radius: 0 8px 8px 0; padding-left: 10px; }
+
+/* ─── DASHBOARD GLOBAL — SEÇÕES POR CATEGORIA ─── */
+.dg-cat-section { margin-bottom: 20px; }
+.dg-cat-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px; cursor: pointer;
+}
+.dg-cat-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px;
+}
+.dg-cat-count {
+  font-size: 10px; padding: 1px 7px; border-radius: 10px;
+  font-family: 'Barlow', sans-serif; font-weight: 700;
+}
+.dg-cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dg-proj-card-v2 {
+  background: var(--card); border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 8px;
+  border: 1px solid var(--border); cursor: pointer;
+  transition: border-color .15s; position: relative;
+  overflow: hidden;
+}
+.dg-proj-card-v2:hover { border-color: var(--border2); }
+.dg-proj-card-v2.prio-crit { border-left: 3px solid var(--red); }
+.dg-proj-card-v2.prio-alert{ border-left: 3px solid var(--yellow); }
+.dg-proj-card-v2.prio-apto { border-left: 3px solid var(--green); }
+.dg-proj-card-v2.prio-done { opacity: .65; }
+.dg-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.dg-card-prp { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; color: var(--accent); }
+.dg-card-nome { font-size: 11px; color: var(--text2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dg-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.dg-score-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.dg-score-crit { background: rgba(255,23,68,.18); color: var(--red); }
+.dg-score-alert{ background: rgba(255,214,0,.15); color: var(--yellow); }
+.dg-score-ok   { background: rgba(0,230,118,.12); color: var(--green); }
+.dg-score-done { background: rgba(255,255,255,.06); color: var(--text3); }
+.dg-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.dg-ctag {
+  font-size: 9px; font-weight: 700; padding: 2px 6px;
+  border-radius: 4px; white-space: nowrap;
+  font-family: 'Barlow Condensed', sans-serif;
+}
+.dg-ctag-crit { background: rgba(255,23,68,.15); color: var(--red); border: 1px solid rgba(255,23,68,.25); }
+.dg-ctag-warn { background: rgba(255,214,0,.12); color: var(--yellow); border: 1px solid rgba(255,214,0,.2); }
+.dg-ctag-info { background: rgba(0,102,255,.12); color: #6699ff; border: 1px solid rgba(0,102,255,.2); }
+.dg-ctag-ok   { background: rgba(0,230,118,.1); color: var(--green); border: 1px solid rgba(0,230,118,.2); }
+.dg-ctag-dim  { background: rgba(255,255,255,.05); color: var(--text3); border: 1px solid rgba(255,255,255,.08); }
+.dg-card-bars { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.dg-card-bar-row { display: flex; align-items: center; gap: 8px; }
+.dg-card-bar-lbl { font-size: 9px; color: var(--text3); min-width: 68px; font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: .8px; }
+.dg-card-bar-track { flex: 1; height: 4px; border-radius: 2px; background: var(--border2); overflow: hidden; }
+.dg-card-bar-fill { height: 100%; border-radius: 2px; transition: width .5s; }
+.dg-card-bar-pct { font-size: 9px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; min-width: 28px; text-align: right; }
+.dg-card-meta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+.dg-card-meta-item { font-size: 10px; color: var(--text2); }
+
+/* KPI v2 — categorias */
+.dg-kpi-v2-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 16px; }
+.dg-kpi-v2 {
+  background: var(--card2); border-radius: 8px;
+  padding: 10px 12px; border: 1px solid var(--border);
+  border-top: 2px solid transparent; position: relative;
+  cursor: pointer; transition: border-color .15s;
+}
+.dg-kpi-v2:hover { border-color: var(--border2); }
+.dg-kpi-v2.kv-crit { border-top-color: var(--red); }
+.dg-kpi-v2.kv-alert{ border-top-color: var(--yellow); }
+.dg-kpi-v2.kv-apto { border-top-color: var(--green); }
+.dg-kpi-v2.kv-info { border-top-color: var(--accent); }
+.dg-kpi-v2.kv-total{ border-top-color: var(--text3); }
+.dg-kpi-v2.active  { background: var(--card); }
+.dg-kpi-v2-val { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 1px; line-height: 1; }
+.dg-kpi-v2-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-top: 2px; }
+
+/* Topbar — indicador crítico */
+.topbar-alert-badge {
+  display: none;
+  background: var(--red); color: #fff;
+  font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 8px;
+  margin-left: -4px; margin-top: -8px;
+  position: relative; top: -6px;
+}
+
 /* ─── LOGIN SCREEN ─── */
 #login-screen {
   position: fixed; inset: 0; z-index: 9999;
@@ -288,6 +430,63 @@ body {
   padding: 12px 16px;
   border-top: 1px solid var(--border);
 }
+
+/* ─── BUSCA DE PROJETOS ─── */
+.search-wrap {
+  padding: 10px 8px 4px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'Barlow', sans-serif;
+  padding: 7px 30px 7px 30px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.search-input:focus {
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 2px rgba(0,102,255,.18);
+}
+.search-input::placeholder { color: var(--text3); }
+.search-icon {
+  position: absolute; left: 17px; top: 20px;
+  color: var(--text3); font-size: 12px; pointer-events: none;
+}
+.search-clear {
+  position: absolute; right: 16px; top: 20px;
+  background: none; border: none; color: var(--text3); cursor: pointer;
+  font-size: 14px; padding: 0; display: none;
+  line-height: 1; transition: color .15s;
+}
+.search-clear:hover { color: var(--text); }
+.search-count {
+  font-size: 10px; color: var(--text3); text-align: right;
+  padding: 2px 6px 4px; min-height: 16px; letter-spacing: .4px;
+}
+.proj-item.search-hidden { display: none; }
+.proj-item mark {
+  background: rgba(0,102,255,.3);
+  color: var(--accent);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.proj-item.search-match-single {
+  border-color: var(--accent2) !important;
+  background: rgba(0,102,255,.07) !important;
+}
+.search-empty {
+  display: none;
+  padding: 24px 12px;
+  text-align: center;
+}
+.search-empty-icon { font-size: 26px; margin-bottom: 8px; }
+.search-empty-text { font-size: 11px; color: var(--text3); line-height: 1.6; }
 
 /* ─── MAIN ─── */
 .main {
@@ -1797,7 +1996,7 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
 <div class="topbar">
   <div class="brand">PMO KTS <span>ONBOARDING DE PROJETOS</span></div>
   <div class="topbar-actions">
-    <button class="pill" id="pill-dashboard" onclick="toggleDashboardGlobal()">🌐 Dashboard Global</button>
+    <button class="pill" id="pill-dashboard" onclick="toggleDashboardGlobal()" style="position:relative">🌐 Dashboard Global<span id="topbar-criticos-badge" class="topbar-alert-badge" title="Projetos críticos">0</span></button>
     <button class="pill" id="pill-gantt-global" onclick="toggleGanttGlobal()">📊 Gantt Global</button>
     <button class="pill" onclick="exportCSV()">⬇ CSV</button>
     <button class="pill" onclick="exportRelatorio()">📄 Relatório PDF</button>
@@ -1825,8 +2024,30 @@ tr.crono-na td:nth-child(2) { text-decoration: line-through; opacity: 0.35; poin
       <div class="sidebar-title">Projetos</div>
       <button class="btn-new-proj" onclick="openModalProjeto()" title="Novo Projeto">＋</button>
     </div>
+
+    <!-- BUSCA -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        class="search-input"
+        id="sidebar-search"
+        type="text"
+        placeholder="Buscar PRP, cliente..."
+        oninput="filtrarProjetos(this.value)"
+        onkeydown="searchKeyNav(event)"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="search-clear" id="search-clear-btn" onclick="limparBusca()" title="Limpar">✕</button>
+      <div class="search-count" id="search-count"></div>
+    </div>
+
     <div class="proj-list" id="proj-list">
       <!-- gerado por JS -->
+    </div>
+    <div class="search-empty" id="search-empty">
+      <div class="search-empty-icon">🔎</div>
+      <div class="search-empty-text">Nenhum projeto encontrado.<br><span id="search-empty-term" style="color:var(--accent);font-weight:600"></span></div>
     </div>
     <div class="sidebar-footer">
       <div style="font-size:11px; color:var(--text3); text-align:center">
@@ -2420,52 +2641,82 @@ const fmt = fmtDate;
 // ═══════════════════════════════════════
 // SIDEBAR
 // ═══════════════════════════════════════
-function _buildSidebarItemHTML(p) {
-  const pctPlan = calcFluxoPctFase(p, 'planejamento');
-  const pctEnc  = calcFluxoPctFase(p, 'encerramento');
-  const corPlan = pctPlan === 100 ? 'var(--green)' : pctPlan > 60 ? '#0066ff' : pctPlan > 30 ? 'var(--yellow)' : 'var(--accent2)';
-  const corEnc  = pctEnc  === 100 ? 'var(--green)' : pctEnc  > 60 ? '#00a870' : pctEnc  > 30 ? 'var(--yellow)' : 'var(--accent2)';
-  const titulo  = p.proposta || p.nome || '—';
-  const subtit  = p.nome || '—';
-  return `<div class="proj-item ${p.id===projId?'active':''}" onclick="openProjeto('${p.id}')">
-    <div class="proj-item-name">${titulo}</div>
-    <div class="proj-item-meta" style="margin-bottom:4px">
-      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px">${subtit}</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:4px">
-      <span style="font-size:8px;min-width:8px">🔵</span>
-      <div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:${pctPlan}%;background:${corPlan}"></div></div>
-      <span style="font-size:9px;font-weight:700;color:${corPlan};min-width:26px;text-align:right">${pctPlan}%</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
-      <span style="font-size:8px;min-width:8px">🟢</span>
-      <div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:${pctEnc}%;background:${corEnc}"></div></div>
-      <span style="font-size:9px;font-weight:700;color:${corEnc};min-width:26px;text-align:right">${pctEnc}%</span>
-    </div>
-  </div>`;
-}
+function _buildSidebarItemHTML(p) { return _buildSidebarItemHTMLv2(p); }
+
+const _SB_CATS = [
+  { key:'critico',   label:'Críticos',         cor:'var(--red)',    dot:'var(--red)' },
+  { key:'alerta',    label:'Em Andamento',      cor:'var(--yellow)', dot:'var(--yellow)' },
+  { key:'andamento', label:'Projetos Ativos',   cor:'var(--accent)', dot:'var(--accent)' },
+  { key:'apto',      label:'Aptos p/ Encerrar', cor:'var(--green)',  dot:'var(--green)' },
+  { key:'concluido', label:'Concluídos',        cor:'var(--text3)',  dot:'var(--green)' },
+  { key:'suspenso',  label:'Suspensos',         cor:'var(--text3)',  dot:'var(--yellow)' },
+];
 
 function renderSidebar() {
-  const el = document.getElementById('proj-list');
+  const listEl  = document.getElementById('proj-list');
+  const emptyEl = document.getElementById('search-empty');
   if (!db.projetos.length) {
-    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Nenhum projeto ainda</div>`;
+    listEl.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Nenhum projeto ainda</div>`;
     return;
   }
-  el.innerHTML = db.projetos.map(_buildSidebarItemHTML).join('');
+
+  // Se busca ativa, não re-renderiza a sidebar categorizada
+  const searchInp = document.getElementById('sidebar-search');
+  if (searchInp && searchInp.value.trim()) { return; }
+
+  // Agrupar por categoria
+  const grupos = {};
+  _SB_CATS.forEach(c => { grupos[c.key] = []; });
+  db.projetos.forEach(p => {
+    const cl = classificarProjeto(p);
+    if (grupos[cl.categoria]) grupos[cl.categoria].push(p);
+    else grupos['andamento'].push(p);
+  });
+
+  // Ordenar: críticos primeiro por score desc, outros por proposta
+  grupos['critico'].sort((a,b) => classificarProjeto(b).score - classificarProjeto(a).score);
+  grupos['alerta'].sort((a,b)  => classificarProjeto(b).score - classificarProjeto(a).score);
+
+  let html = '';
+  _SB_CATS.forEach(cat => {
+    const projs = grupos[cat.key];
+    if (!projs.length) return;
+    const isCollapsed = !!_sbCollapsed[cat.key];
+    html += `<div class="sb-section-label" onclick="toggleSbSection('${cat.key}')">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="width:6px;height:6px;border-radius:50%;background:${cat.dot};flex-shrink:0;display:inline-block"></span>
+        <span style="color:${cat.cor}">${cat.label}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span class="sb-section-count" style="background:${cat.dot}22;color:${cat.cor}">${projs.length}</span>
+        <span id="sb-chev-${cat.key}" style="color:var(--text3);font-size:10px;transition:transform .2s${isCollapsed?';transform:rotate(-90deg)':''}">▾</span>
+      </div>
+    </div>
+    <div class="sb-section-body${isCollapsed?' collapsed':''}" id="sb-body-${cat.key}" style="max-height:${isCollapsed?'0':'2000px'}">
+      ${projs.map(_buildSidebarItemHTMLv2).join('')}
+    </div>`;
+  });
+
+  listEl.innerHTML = html;
+  listEl.style.display = '';
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  // Atualizar badge de críticos na topbar
+  _atualizarTopbarBadge(grupos['critico'].length);
+}
+
+function _atualizarTopbarBadge(nCriticos) {
+  let badge = document.getElementById('topbar-criticos-badge');
+  if (!badge) return;
+  badge.style.display = nCriticos > 0 ? 'inline' : 'none';
+  badge.textContent = nCriticos;
 }
 
 // Atualiza apenas 1 item da sidebar em vez de re-renderizar tudo
 function updateSidebarItem(id) {
-  const p = db.projetos.find(x => x.id === id);
-  if (!p) return;
-  const existing = document.querySelector(`#proj-list .proj-item[onclick="openProjeto('${id}')"]`);
-  if (existing) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = _buildSidebarItemHTML(p);
-    existing.replaceWith(tmp.firstElementChild);
-  } else {
-    renderSidebar();
-  }
+  // Com categorias dinâmicas, sempre re-renderiza a sidebar completa
+  // (o projeto pode mudar de categoria após uma atualização)
+  renderSidebar();
 }
 
 // ═══════════════════════════════════════
@@ -4589,14 +4840,32 @@ function renderDashboardGlobal() {
       <span class="dg-chevron">▾</span>
     </div>
     <div class="dg-widget-body">
-      <div class="dg-kpi-grid">
-        <div class="dg-kpi c1"><div class="dg-kpi-val" style="color:var(--accent2)">${total}</div><div class="dg-kpi-lbl">Total de Projetos</div></div>
-        <div class="dg-kpi c2"><div class="dg-kpi-val" style="color:var(--green)">${concluidos}</div><div class="dg-kpi-lbl">Concluídos</div></div>
-        <div class="dg-kpi c3"><div class="dg-kpi-val" style="color:var(--accent)">${emAndamento}</div><div class="dg-kpi-lbl">Em Andamento</div></div>
-        <div class="dg-kpi c4"><div class="dg-kpi-val" style="color:var(--red)">${comAtraso}</div><div class="dg-kpi-lbl">Com Atraso</div></div>
-        <div class="dg-kpi c5"><div class="dg-kpi-val" style="color:var(--purple)">${suspensos}</div><div class="dg-kpi-lbl">Suspensos</div></div>
-        <div class="dg-kpi c6"><div class="dg-kpi-val" style="color:var(--yellow)">${mediaFluxo}%</div><div class="dg-kpi-lbl">Média Fluxo</div></div>
-      </div>
+      ${(() => {
+        // KPIs inteligentes por categoria
+        const grpCrit  = projsFiltrados.filter(p => { const c=classificarProjeto(p); return c.categoria==='critico'; });
+        const grpAlerta= projsFiltrados.filter(p => { const c=classificarProjeto(p); return c.categoria==='alerta'; });
+        const grpApto  = projsFiltrados.filter(p => { const c=classificarProjeto(p); return c.categoria==='apto'; });
+        const grpConc  = projsFiltrados.filter(p => { const c=classificarProjeto(p); return c.categoria==='concluido'; });
+        const totalAtivos = projsFiltrados.filter(p => !['concluido','suspenso'].includes(classificarProjeto(p).categoria)).length;
+        const nAtrasos = projsFiltrados.reduce((a,p) => {
+          const crono=p.crono||{}, rc=p.cronoRealizado||{}, over=p.cronoOverride||{}, hoje=new Date().toISOString().split('T')[0];
+          return a + CRONO_LINHAS.filter(l=>{ const prev=over[l[0]]||crono[l[0]]||''; return prev&&prev<hoje&&!rc[l[1]]; }).length;
+        }, 0);
+        window._dgFiltroCategoria = window._dgFiltroCategoria || null;
+        const kpis = [
+          { cls:'kv-crit',  val:grpCrit.length,   lbl:'Críticos',       cor:'var(--red)',    cat:'critico'  },
+          { cls:'kv-alert', val:grpAlerta.length,  lbl:'Em Alerta',      cor:'var(--yellow)', cat:'alerta'   },
+          { cls:'kv-apto',  val:grpApto.length,    lbl:'Aptos Encerrar', cor:'var(--green)',  cat:'apto'     },
+          { cls:'kv-info',  val:nAtrasos,          lbl:'Atrasos Abertos',cor:'var(--accent)', cat:null       },
+          { cls:'kv-total', val:total,             lbl:'Total Ativos',   cor:'var(--text2)',  cat:null       },
+        ];
+        return `<div class="dg-kpi-v2-grid">
+          ${kpis.map(k=>`<div class="dg-kpi-v2 ${k.cls}${window._dgFiltroCategoria===k.cat?' active':''}" onclick="${k.cat?`dgFiltrarCat('${k.cat}')`:''}" style="${k.cat?'cursor:pointer':''}">
+            <div class="dg-kpi-v2-val" style="color:${k.cor}">${k.val}</div>
+            <div class="dg-kpi-v2-lbl">${k.lbl}</div>
+          </div>`).join('')}
+        </div>`;
+      })()}
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
           <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;margin-bottom:6px">Etapas de Execução</div>
@@ -4633,41 +4902,109 @@ function renderDashboardGlobal() {
   // ── Widgets Saúde, Fluxo, Alertas, Tabela, Timeline ──────────────────
   const projsOrd = [...projsFiltrados].sort((a,b) => dgFluxoPct(b) - dgFluxoPct(a));
 
-  const wSaude = `
-  <div class="dg-widget" id="dg-w-saude">
-    <div class="dg-widget-head" onclick="toggleWidgetCollapse('saude')">
-      <div class="dg-widget-title">🩺 Saúde dos Projetos</div>
-      <span class="dg-chevron">▾</span>
-    </div>
-    <div class="dg-widget-body">
-      <div class="dg-proj-grid">
-        ${projsFiltrados.map(p => {
-          const st=dgStatusProj(p), fpct=dgFluxoPct(p), epct=dgExecPct(p);
-          const fc=fpct===100?'var(--green)':fpct>60?'var(--accent)':fpct>30?'var(--yellow)':'var(--accent2)';
-          const ec=epct===100?'var(--green)':epct>60?'var(--accent)':epct>30?'var(--yellow)':'var(--accent2)';
-          return `<div class="dg-proj-card" style="border-left-color:${st.cor}" onclick="abrirProjetoDash('${p.id}')">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start">
-              <div><div class="dg-proj-card-title">${p.proposta||p.nome}</div><div class="dg-proj-card-sub">${p.nome}</div></div>
-              <span class="dg-status-chip" style="background:${st.bg};color:${st.cor}">${st.label}</span>
+  const wSaude = (() => {
+    const CAT_CONFIG = [
+      { key:'critico',   label:'Críticos — ação imediata',  cor:'var(--red)',    dot:'var(--red)',    prioClass:'prio-crit'  },
+      { key:'alerta',    label:'Em alerta',                 cor:'var(--yellow)', dot:'var(--yellow)', prioClass:'prio-alert' },
+      { key:'andamento', label:'Em andamento',              cor:'var(--accent)', dot:'var(--accent)', prioClass:''           },
+      { key:'apto',      label:'Aptos para encerramento',   cor:'var(--green)',  dot:'var(--green)',  prioClass:'prio-apto'  },
+      { key:'concluido', label:'Concluídos',                cor:'var(--text3)',  dot:'var(--green)',  prioClass:'prio-done'  },
+      { key:'suspenso',  label:'Suspensos / Cancelados',    cor:'var(--text3)',  dot:'var(--yellow)', prioClass:''           },
+    ];
+    // Agrupar projetos
+    const grupos = {};
+    CAT_CONFIG.forEach(c => { grupos[c.key] = []; });
+    const filtCat = window._dgFiltroCategoria;
+    (filtCat ? projsFiltrados.filter(p => classificarProjeto(p).categoria === filtCat) : projsFiltrados)
+      .forEach(p => {
+        const cl = classificarProjeto(p);
+        if (grupos[cl.categoria]) grupos[cl.categoria].push({ p, cl });
+        else grupos['andamento'].push({ p, cl });
+      });
+    // Ordenar críticos/alertas por score desc
+    ['critico','alerta'].forEach(k => grupos[k].sort((a,b) => b.cl.score - a.cl.score));
+
+    const _cardHTML = (p, cl, prioClass) => {
+      const fpct = dgFluxoPct(p), epct = dgExecPct(p), encPct = calcFluxoPctFase(p,'encerramento');
+      const fc = fpct===100?'var(--green)':fpct>60?'var(--accent)':fpct>30?'var(--yellow)':'var(--accent2)';
+      const ec = epct===100?'var(--green)':epct>60?'var(--accent)':epct>30?'var(--yellow)':'var(--accent2)';
+      const enc= encPct===100?'var(--green)':encPct>60?'var(--accent)':encPct>30?'var(--yellow)':'var(--accent2)';
+      const scoreLabel = cl.score > 0 ? 'P'+Math.min(9,cl.score) : (cl.categoria==='apto'?'✓':'—');
+      const scoreCls = {crit:'dg-score-crit',alert:'dg-score-alert',ok:'dg-score-ok',done:'dg-score-done'}[cl.scoreCls]||'dg-score-done';
+      const tagsHtml = cl.tags.length
+        ? '<div class="dg-card-tags">'+cl.tags.map(t=>`<span class="dg-ctag dg-ctag-${t.cls}">${t.txt}</span>`).join('')+'</div>'
+        : '';
+      const metaRow = [
+        p.cliente?`<span class="dg-card-meta-item">🏢 ${p.cliente}</span>`:'',
+        p.inicio ?`<span class="dg-card-meta-item">▶ ${fmt(p.inicio)}</span>`:'',
+        p.termino?`<span class="dg-card-meta-item">⏹ ${fmt(p.termino)}</span>`:'',
+        p.dias   ?`<span class="dg-card-meta-item">⏱ ${p.dias}d</span>`:'',
+      ].filter(Boolean).join('');
+
+      return `<div class="dg-proj-card-v2 ${prioClass}" onclick="abrirProjetoDash('${p.id}')">
+        <div class="dg-card-header">
+          <div style="min-width:0;flex:1">
+            <div class="dg-card-prp">${p.proposta||p.nome}</div>
+            <div class="dg-card-nome">${p.nome}</div>
+          </div>
+          <div class="dg-card-right">
+            <div class="dg-score-badge ${scoreCls}">${scoreLabel}</div>
+          </div>
+        </div>
+        ${tagsHtml}
+        ${metaRow?`<div class="dg-card-meta-row">${metaRow}</div>`:''}
+        <div class="dg-card-bars">
+          <div class="dg-card-bar-row">
+            <span class="dg-card-bar-lbl">Planejamento</span>
+            <div class="dg-card-bar-track"><div class="dg-card-bar-fill" style="width:${fpct}%;background:${fc}"></div></div>
+            <span class="dg-card-bar-pct" style="color:${fc}">${fpct}%</span>
+          </div>
+          <div class="dg-card-bar-row">
+            <span class="dg-card-bar-lbl">Execução</span>
+            <div class="dg-card-bar-track"><div class="dg-card-bar-fill" style="width:${epct}%;background:${ec}"></div></div>
+            <span class="dg-card-bar-pct" style="color:${ec}">${epct}%</span>
+          </div>
+          ${encPct > 0 ? `<div class="dg-card-bar-row">
+            <span class="dg-card-bar-lbl">Encerramento</span>
+            <div class="dg-card-bar-track"><div class="dg-card-bar-fill" style="width:${encPct}%;background:${enc}"></div></div>
+            <span class="dg-card-bar-pct" style="color:${enc}">${encPct}%</span>
+          </div>` : ''}
+        </div>
+      </div>`;
+    };
+
+    let sectionsHTML = '';
+    CAT_CONFIG.forEach(cat => {
+      const items = grupos[cat.key];
+      if (!items.length) return;
+      const collapsed = window['_dgCatCollapsed_'+cat.key];
+      sectionsHTML += `
+        <div class="dg-cat-section">
+          <div class="dg-cat-head" onclick="dgToggleCat('${cat.key}')">
+            <span class="dg-cat-dot" style="background:${cat.dot}"></span>
+            <span class="dg-cat-title" style="color:${cat.cor}">${cat.label}</span>
+            <span class="dg-cat-count" style="background:${cat.dot}22;color:${cat.cor}">${items.length}</span>
+            <span style="color:var(--text3);font-size:10px;margin-left:auto;transition:transform .2s${collapsed?';transform:rotate(-90deg)':''}">▾</span>
+          </div>
+          <div id="dg-cat-body-${cat.key}" style="${collapsed?'display:none':''}">
+            <div class="dg-proj-grid">
+              ${items.map(({p,cl}) => _cardHTML(p, cl, cat.prioClass)).join('')}
             </div>
-            <div class="dg-proj-card-meta">
-              ${p.cliente?`<span>🏢 ${p.cliente}</span>`:''}
-              ${p.inicio?`<span>📅 ${fmt(p.inicio)}</span>`:''}
-              ${p.termino?`<span>🏁 ${fmt(p.termino)}</span>`:''}
-            </div>
-            <div class="dg-proj-bar-wrap">
-              <div class="dg-proj-bar-label"><span>⚡ Fluxo</span><span style="color:${fc};font-weight:700">${fpct}%</span></div>
-              <div class="dg-proj-bar"><div class="dg-proj-bar-fill" style="width:${fpct}%;background:${fc}"></div></div>
-            </div>
-            <div class="dg-proj-bar-wrap" style="margin-top:6px">
-              <div class="dg-proj-bar-label"><span>🔧 Execução</span><span style="color:${ec};font-weight:700">${epct}%</span></div>
-              <div class="dg-proj-bar"><div class="dg-proj-bar-fill" style="width:${epct}%;background:${ec}"></div></div>
-            </div>
-          </div>`;
-        }).join('')}
+          </div>
+        </div>`;
+    });
+
+    return `<div class="dg-widget" id="dg-w-saude">
+      <div class="dg-widget-head" onclick="toggleWidgetCollapse('saude')">
+        <div class="dg-widget-title">🩺 Saúde dos Projetos</div>
+        ${filtCat ? `<button onclick="dgFiltrarCat(null);event.stopPropagation()" style="font-size:10px;padding:2px 8px;background:rgba(255,255,255,.07);border:1px solid var(--border2);border-radius:6px;color:var(--text2);cursor:pointer">✕ Ver todos</button>` : ''}
+        <span class="dg-chevron">▾</span>
       </div>
-    </div>
-  </div>`;
+      <div class="dg-widget-body">
+        ${sectionsHTML || '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Nenhum projeto nesta categoria</div>'}
+      </div>
+    </div>`;
+  })();
 
   const wFluxo = `
   <div class="dg-widget" id="dg-w-fluxo-rank">
@@ -5026,6 +5363,353 @@ async function removerUsuario(id) {
   if (SUPA_OK) await supaExcluirUsuario(id);
   renderAdminUsers();
   toast('🗑 Usuário removido.');
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// BUSCA INTELIGENTE DE PROJETOS NA SIDEBAR
+// ═══════════════════════════════════════════════════════════════════
+let _searchTerm = '';
+let _searchFocusIdx = -1;
+
+function filtrarProjetos(termo) {
+  _searchTerm = termo.trim().toLowerCase();
+  const clearBtn = document.getElementById('search-clear-btn');
+  const countEl  = document.getElementById('search-count');
+  const emptyEl  = document.getElementById('search-empty');
+  const emptyTerm= document.getElementById('search-empty-term');
+  const listEl   = document.getElementById('proj-list');
+
+  clearBtn.style.display = _searchTerm ? 'block' : 'none';
+  _searchFocusIdx = -1;
+
+  if (!_searchTerm) {
+    // Sem filtro: mostra tudo sem highlight
+    renderSidebar();
+    countEl.textContent = '';
+    emptyEl.style.display = 'none';
+    listEl.style.display = '';
+    return;
+  }
+
+  // Filtrar e destacar
+  const tokens = _searchTerm.split(/\s+/).filter(Boolean);
+  const projs  = db.projetos || [];
+
+  const matches = projs.filter(p => {
+    const hay = [
+      p.proposta || '', p.nome || '', p.cliente || '',
+      p.local || '', p.responsavel || '', p.status || ''
+    ].join(' ').toLowerCase();
+    return tokens.every(t => hay.includes(t));
+  });
+
+  // Renderizar lista filtrada com highlight
+  if (matches.length === 0) {
+    listEl.innerHTML = '';
+    listEl.style.display = 'none';
+    emptyEl.style.display = 'block';
+    if (emptyTerm) emptyTerm.textContent = '"' + termo.trim() + '"';
+    countEl.textContent = '';
+    return;
+  }
+
+  listEl.style.display = '';
+  emptyEl.style.display = 'none';
+
+  listEl.innerHTML = matches.map(p => _buildSidebarSearchItem(p, tokens)).join('');
+
+  // Destaque automático se único resultado
+  if (matches.length === 1) {
+    const el = listEl.querySelector('.proj-item');
+    if (el) el.classList.add('search-match-single');
+  }
+
+  const total = projs.length;
+  countEl.textContent = matches.length === total
+    ? '' : matches.length + ' de ' + total;
+}
+
+function _buildSidebarSearchItem(p, tokens) {
+  const pctPlan = calcFluxoPctFase(p, 'planejamento');
+  const pctEnc  = calcFluxoPctFase(p, 'encerramento');
+  const corPlan = pctPlan === 100 ? 'var(--green)' : pctPlan > 60 ? '#0066ff' : pctPlan > 30 ? 'var(--yellow)' : 'var(--accent2)';
+  const corEnc  = pctEnc  === 100 ? 'var(--green)' : pctEnc  > 60 ? '#00a870' : pctEnc  > 30 ? 'var(--yellow)' : 'var(--accent2)';
+
+  const titulo = _highlight(p.proposta || p.nome || '—', tokens);
+  const subtit = _highlight(p.nome || '—', tokens);
+  const cli    = p.cliente ? _highlight(p.cliente, tokens) : '';
+
+  const statusCor = {
+    'Em Andamento': 'var(--accent)', 'Atrasado': 'var(--red)',
+    'Concluído': 'var(--green)', 'Pendente': 'var(--yellow)'
+  }[p.status] || 'var(--text3)';
+
+  const extraInfo = cli ? `<div style="font-size:10px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cli}</div>` : '';
+  const statusBadge = p.status ? `<span style="font-size:9px;color:${statusCor};font-weight:700;margin-left:auto;white-space:nowrap">${p.status}</span>` : '';
+  const diasInfo = p.dias ? `<span style="font-size:9px;color:var(--text3)">${p.dias}d</span>` : '';
+
+  return `<div class="proj-item ${p.id===projId?'active':''}" onclick="openProjeto('${p.id}');limparBusca()" data-search-id="${p.id}">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">
+      <div class="proj-item-name" style="flex:1;min-width:0">${titulo}</div>
+      ${statusBadge}
+    </div>
+    <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;color:var(--text2);margin-top:2px">${subtit}</div>
+    ${extraInfo}
+    <div style="display:flex;align-items:center;gap:4px;margin-top:4px">
+      <span style="font-size:8px">🔵</span>
+      <div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:${pctPlan}%;background:${corPlan}"></div></div>
+      <span style="font-size:9px;font-weight:700;color:${corPlan};min-width:26px;text-align:right">${pctPlan}%</span>
+      ${diasInfo}
+    </div>
+    <div style="display:flex;align-items:center;gap:4px;margin-top:2px">
+      <span style="font-size:8px">🟢</span>
+      <div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:${pctEnc}%;background:${corEnc}"></div></div>
+      <span style="font-size:9px;font-weight:700;color:${corEnc};min-width:26px;text-align:right">${pctEnc}%</span>
+    </div>
+  </div>`;
+}
+
+function _highlight(text, tokens) {
+  if (!text) return '';
+  let result = text;
+  tokens.forEach(t => {
+    if (!t) return;
+    const re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+    result = result.replace(re, '<mark>$1</mark>');
+  });
+  return result;
+}
+
+function limparBusca() {
+  const inp = document.getElementById('sidebar-search');
+  if (inp) inp.value = '';
+  filtrarProjetos('');
+}
+
+function searchKeyNav(e) {
+  const items = Array.from(document.querySelectorAll('#proj-list .proj-item:not(.search-hidden)'));
+  if (!items.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _searchFocusIdx = Math.min(_searchFocusIdx + 1, items.length - 1);
+    items[_searchFocusIdx]?.scrollIntoView({ block: 'nearest' });
+    items.forEach((el, i) => el.style.outline = i === _searchFocusIdx ? '1px solid var(--accent2)' : '');
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _searchFocusIdx = Math.max(_searchFocusIdx - 1, 0);
+    items[_searchFocusIdx]?.scrollIntoView({ block: 'nearest' });
+    items.forEach((el, i) => el.style.outline = i === _searchFocusIdx ? '1px solid var(--accent2)' : '');
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (_searchFocusIdx >= 0 && items[_searchFocusIdx]) {
+      items[_searchFocusIdx].click();
+    } else if (items.length === 1) {
+      items[0].click();
+    }
+  } else if (e.key === 'Escape') {
+    limparBusca();
+    document.getElementById('sidebar-search')?.blur();
+  }
+}
+
+// Atalho global: Ctrl+F ou / foca a busca
+document.addEventListener('keydown', e => {
+  const inp = document.getElementById('sidebar-search');
+  if (!inp) return;
+  // Ctrl+F ou '/' quando não está em input
+  if ((e.ctrlKey && e.key === 'f') ||
+      (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA')) {
+    e.preventDefault();
+    inp.focus();
+    inp.select();
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════════════════
+// MOTOR DE INTELIGÊNCIA — CLASSIFICAÇÃO AUTOMÁTICA DE PROJETOS
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * classificarProjeto(p) → { categoria, score, tags, scoreCls }
+ *
+ * Categorias: 'critico' | 'alerta' | 'apto' | 'andamento' | 'concluido' | 'suspenso'
+ * Score 0-10: quanto maior, mais urgente
+ */
+function classificarProjeto(p) {
+  const hoje   = new Date().toISOString().split('T')[0];
+  const crono  = p.crono  || {};
+  const rc     = p.cronoRealizado || {};
+  const over   = p.cronoOverride  || {};
+  const na     = p.cronoNA        || {};
+  const resp   = p.cronoResp      || {};
+
+  // ── Concluído / Suspenso ──────────────────────────────────────────
+  const fluxoPct = calcFluxoPct(p);
+  const execPct  = calcPct(p);
+  if (p.status === 'Concluído' || (fluxoPct === 100 && execPct === 100)) {
+    return { categoria: 'concluido', score: 0, tags: [], scoreCls: 'done' };
+  }
+  if (p.status === 'Suspenso' || p.status === 'Cancelado') {
+    return { categoria: 'suspenso', score: 0, tags: [{ txt: p.status, cls: 'dim' }], scoreCls: 'done' };
+  }
+
+  // ── Calcular score ────────────────────────────────────────────────
+  let score = 0;
+  const tags = [];
+
+  const pctPlan = calcFluxoPctFase(p, 'planejamento');
+  const pctEnc  = calcFluxoPctFase(p, 'encerramento');
+  const inicioProj  = over['inicioProj']  || crono['inicioProj']  || '';
+  const terminoProj = over['terminoProj'] || crono['terminoProj'] || '';
+
+  // 1. Atividades atrasadas no fluxo
+  let nAtrasos = 0;
+  CRONO_LINHAS.forEach(l => {
+    if (na[l[0]]) return;
+    const prev = over[l[0]] || crono[l[0]] || '';
+    if (prev && prev < hoje && !rc[l[1]]) nAtrasos++;
+  });
+  if (nAtrasos > 0) {
+    score += Math.min(3, nAtrasos);
+    tags.push({ txt: nAtrasos + (nAtrasos === 1 ? ' atraso' : ' atrasos'), cls: 'crit' });
+  }
+
+  // 2. Início da execução já passou + planejamento incompleto
+  if (inicioProj && inicioProj < hoje && pctPlan < 100) {
+    score += 4;
+    tags.push({ txt: 'Início vencido', cls: 'crit' });
+    if (pctPlan < 80) tags.push({ txt: 'Planej. ' + pctPlan + '%', cls: 'crit' });
+  }
+  // 3. Início em ≤ 7 dias + planejamento < 100%
+  else if (inicioProj && inicioProj > hoje) {
+    const diasAteInicio = Math.round((new Date(inicioProj+'T00:00:00') - new Date(hoje+'T00:00:00')) / 86400000);
+    if (diasAteInicio <= 7 && pctPlan < 100) {
+      score += 3;
+      tags.push({ txt: diasAteInicio + 'd p/ início', cls: 'warn' });
+      if (pctPlan < 80) tags.push({ txt: 'Planej. ' + pctPlan + '%', cls: 'warn' });
+    } else if (diasAteInicio <= 14 && pctPlan < 80) {
+      score += 1;
+      tags.push({ txt: diasAteInicio + 'd p/ início', cls: 'info' });
+    }
+  }
+
+  // 4. Término próximo + encerramento não iniciado
+  if (terminoProj) {
+    const diasAteTermino = Math.round((new Date(terminoProj+'T00:00:00') - new Date(hoje+'T00:00:00')) / 86400000);
+    if (diasAteTermino <= 14 && pctEnc < 50) {
+      score += 2;
+      tags.push({ txt: diasAteTermino > 0 ? diasAteTermino + 'd p/ término' : 'Término vencido', cls: 'warn' });
+    }
+  }
+
+  // 5. Etapas de execução atrasadas
+  const etapasAtras = (p.etapas || []).filter(e => e.status === 'Atrasado').length;
+  if (etapasAtras > 0) {
+    score += Math.min(2, etapasAtras);
+    tags.push({ txt: etapasAtras + ' etapa' + (etapasAtras > 1 ? 's' : '') + ' atrasada' + (etapasAtras > 1 ? 's' : ''), cls: 'crit' });
+  }
+
+  // 6. Sem responsável em atividades pendentes
+  const semResp = CRONO_LINHAS.filter(l => {
+    if (na[l[0]]) return false;
+    const prev = over[l[0]] || crono[l[0]] || '';
+    return prev && !rc[l[1]] && !resp[l[0]];
+  }).length;
+  if (semResp > 0 && score > 0) {
+    score += 1;
+    tags.push({ txt: 'Sem responsável', cls: 'info' });
+  }
+
+  // ── Verificar se apto para encerramento ──────────────────────────
+  const execRc = rc['terminoProj'] || (terminoProj && terminoProj <= hoje);
+  const aptoEnc = execPct >= 90 && pctPlan >= 100 &&
+    (execRc || (terminoProj && terminoProj <= hoje + 30)) &&
+    pctEnc >= 0; // sempre elegível se execução pronta
+
+  if (aptoEnc) {
+    // Pendências de encerramento
+    if (!rc['infoAsBuilt']) tags.push({ txt: 'AS Built pendente', cls: 'ok' });
+    if (!rc['emissaoAsBuilt']) tags.push({ txt: 'Emissão pendente', cls: 'ok' });
+    if (!rc['fechamento']) tags.push({ txt: 'Fechamento disponível', cls: 'ok' });
+    return { categoria: 'apto', score: 0, tags, scoreCls: 'ok' };
+  }
+
+  // ── Tags informativas adicionais ─────────────────────────────────
+  if (tags.length === 0) {
+    if (inicioProj && inicioProj > hoje) {
+      const d = Math.round((new Date(inicioProj+'T00:00:00') - new Date(hoje+'T00:00:00')) / 86400000);
+      tags.push({ txt: d + 'd p/ início', cls: 'info' });
+    } else if (execPct > 0) {
+      tags.push({ txt: 'Execução ' + execPct + '%', cls: 'info' });
+    }
+  }
+
+  // ── Sem atualização ──────────────────────────────────────────────
+  if (p.criadoEm) {
+    const diasSemUpdate = Math.round((new Date(hoje) - new Date(p._updatedAt || p.criadoEm)) / 86400000);
+    if (diasSemUpdate >= 7 && score === 0) {
+      tags.push({ txt: diasSemUpdate + 'd sem update', cls: 'dim' });
+    }
+  }
+
+  // ── Categoria final ──────────────────────────────────────────────
+  let categoria, scoreCls;
+  if (score >= 6) { categoria = 'critico'; scoreCls = 'crit'; }
+  else if (score >= 3) { categoria = 'alerta'; scoreCls = 'alert'; }
+  else if (score >= 1) { categoria = 'andamento'; scoreCls = 'alert'; }
+  else { categoria = 'andamento'; scoreCls = 'ok'; }
+
+  return { categoria, score, tags, scoreCls };
+}
+
+function _renderTagsHTML(tags, prefix) {
+  if (!tags.length) return '';
+  return '<div class="' + prefix + '-tags">' +
+    tags.map(t => '<span class="' + prefix + '-tag ptag-' + t.cls + '">' + t.txt + '</span>').join('') +
+    '</div>';
+}
+
+// ─── SIDEBAR INTELIGENTE ──────────────────────────────────────────
+const _sbCollapsed = {};
+
+function toggleSbSection(key) {
+  _sbCollapsed[key] = !_sbCollapsed[key];
+  const el = document.getElementById('sb-body-' + key);
+  if (el) el.classList.toggle('collapsed', !!_sbCollapsed[key]);
+  const chev = document.getElementById('sb-chev-' + key);
+  if (chev) chev.style.transform = _sbCollapsed[key] ? 'rotate(-90deg)' : '';
+}
+
+function _buildSidebarItemHTMLv2(p) {
+  const cl = classificarProjeto(p);
+  const pctPlan = calcFluxoPctFase(p, 'planejamento');
+  const pctEnc  = calcFluxoPctFase(p, 'encerramento');
+  const prioClass = { critico:'prio-crit', alerta:'prio-alert', apto:'prio-apto' }[cl.categoria] || '';
+  const scoreClass = { crit:'proj-score-crit', alert:'proj-score-alert', ok:'proj-score-ok', done:'proj-score-done' }[cl.scoreCls];
+  const scoreLabel = cl.score > 0 ? 'P' + Math.min(9, cl.score) : (cl.categoria === 'apto' ? '✓' : cl.categoria === 'concluido' ? '✓' : '—');
+  const corPlan = pctPlan === 100 ? 'var(--green)' : pctPlan > 60 ? '#0066ff' : pctPlan > 30 ? 'var(--yellow)' : 'var(--accent2)';
+  const titulo  = p.proposta || p.nome || '—';
+  const subtit  = p.nome || '—';
+  const tagsHtml = cl.tags.length ? '<div class="proj-tags">' + cl.tags.slice(0,2).map(t => '<span class="proj-tag ptag-' + t.cls + '">' + t.txt + '</span>').join('') + '</div>' : '';
+
+  return `<div class="proj-item ${p.id===projId?'active':''} ${prioClass}" onclick="openProjeto('${p.id}')">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">
+      <div class="proj-item-name" style="flex:1;min-width:0">${titulo}</div>
+      <span class="proj-score ${scoreClass}">${scoreLabel}</span>
+    </div>
+    <div class="proj-item-meta" style="margin-bottom:2px">
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">${subtit}</span>
+    </div>
+    ${tagsHtml}
+    <div style="display:flex;align-items:center;gap:4px;margin-top:5px">
+      <span style="font-size:8px;min-width:8px;color:var(--text3)">▸</span>
+      <div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:${pctPlan}%;background:${corPlan}"></div></div>
+      <span style="font-size:9px;font-weight:700;color:${corPlan};min-width:26px;text-align:right">${pctPlan}%</span>
+    </div>
+  </div>`;
 }
 
 // ── Verificar sessão ao iniciar ──────────────────────────────────────────
@@ -6796,6 +7480,17 @@ function renderGanttGlobal() {
  * Define o filtro de status para uma seção de responsável e re-renderiza o Dashboard Global
  */
 let _dgRenderTimer = null;
+
+function dgFiltrarCat(cat) {
+  window._dgFiltroCategoria = window._dgFiltroCategoria === cat ? null : cat;
+  renderDashboardGlobal();
+}
+
+function dgToggleCat(key) {
+  window['_dgCatCollapsed_'+key] = !window['_dgCatCollapsed_'+key];
+  const el = document.getElementById('dg-cat-body-'+key);
+  if (el) el.style.display = window['_dgCatCollapsed_'+key] ? 'none' : '';
+}
 function dgSetStatusFiltro(uid, status) {
   if (!window.dgFiltroStatus) window.dgFiltroStatus = {};
   window.dgFiltroStatus[uid] = status || null;
