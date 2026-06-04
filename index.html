@@ -5836,32 +5836,46 @@ function toggleSbSection(key) {
 }
 
 function _buildSidebarItemHTMLv2(p) {
-  const cl = classificarProjeto(p);
+  const cl      = classificarProjeto(p);
   const pctPlan = calcFluxoPctFase(p, 'planejamento');
+  const pctExec = calcFluxoPctFase(p, 'execucao');
   const pctEnc  = calcFluxoPctFase(p, 'encerramento');
-  const prioClass = { critico:'prio-crit', alerta:'prio-alert', apto:'prio-apto' }[cl.categoria] || '';
-  const scoreClass = { crit:'proj-score-crit', alert:'proj-score-alert', ok:'proj-score-ok', done:'proj-score-done' }[cl.scoreCls];
-  const scoreLabel = cl.score > 0 ? 'P' + Math.min(9, cl.score) : (cl.categoria === 'apto' ? '✓' : cl.categoria === 'concluido' ? '✓' : '—');
-  const corPlan = pctPlan === 100 ? 'var(--green)' : pctPlan > 60 ? '#0066ff' : pctPlan > 30 ? 'var(--yellow)' : 'var(--accent2)';
-  const titulo  = p.proposta || p.nome || '—';
-  const subtit  = p.nome || '—';
-  const tagsHtml = cl.tags.length ? '<div class="proj-tags">' + cl.tags.slice(0,2).map(t => '<span class="proj-tag ptag-' + t.cls + '">' + t.txt + '</span>').join('') + '</div>' : '';
 
-  return `<div class="proj-item ${p.id===projId?'active':''} ${prioClass}" onclick="openProjeto('${p.id}')">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">
-      <div class="proj-item-name" style="flex:1;min-width:0">${titulo}</div>
-      <span class="proj-score ${scoreClass}">${scoreLabel}</span>
-    </div>
-    <div class="proj-item-meta" style="margin-bottom:2px">
-      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">${subtit}</span>
-    </div>
-    ${tagsHtml}
-    <div style="display:flex;align-items:center;gap:4px;margin-top:5px">
-      <span style="font-size:8px;min-width:8px;color:var(--text3)">▸</span>
-      <div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:${pctPlan}%;background:${corPlan}"></div></div>
-      <span style="font-size:9px;font-weight:700;color:${corPlan};min-width:26px;text-align:right">${pctPlan}%</span>
-    </div>
-  </div>`;
+  const prioClass  = { critico:'prio-crit', alerta:'prio-alert', apto:'prio-apto' }[cl.categoria] || '';
+  const scoreClass = { crit:'proj-score-crit', alert:'proj-score-alert', ok:'proj-score-ok', done:'proj-score-done' }[cl.scoreCls];
+  const scoreLabel = cl.score > 0 ? 'P' + Math.min(9, cl.score) : (cl.categoria === 'apto' || cl.categoria === 'concluido' ? '✓' : '—');
+
+  const _cor = pct => pct === 100 ? 'var(--green)' : pct > 60 ? 'var(--accent)' : pct > 30 ? 'var(--yellow)' : 'var(--border2)';
+  const corPlan = _cor(pctPlan);
+  const corExec = pctExec === 100 ? 'var(--green)' : pctExec > 0 ? 'var(--yellow)' : 'var(--border2)';
+  const corEnc  = _cor(pctEnc);
+
+  const titulo = p.proposta || p.nome || '—';
+  const subtit = p.nome || '—';
+  const tagsHtml = cl.tags.length
+    ? '<div class="proj-tags">' + cl.tags.slice(0,2).map(t => '<span class="proj-tag ptag-' + t.cls + '">' + t.txt + '</span>').join('') + '</div>'
+    : '';
+
+  const _bar = (label, pct, cor) =>
+    '<div style="display:flex;align-items:center;gap:4px;margin-top:3px">' +
+      '<span style="font-size:8px;color:var(--text3);min-width:14px;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.5px">' + label + '</span>' +
+      '<div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:' + pct + '%;background:' + cor + '"></div></div>' +
+      '<span style="font-size:9px;font-weight:700;color:' + cor + ';min-width:26px;text-align:right">' + pct + '%</span>' +
+    '</div>';
+
+  return '<div class="proj-item ' + (p.id===projId?'active':'') + ' ' + prioClass + '" onclick="openProjeto(\'' + p.id + '\')">' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">' +
+      '<div class="proj-item-name" style="flex:1;min-width:0">' + titulo + '</div>' +
+      '<span class="proj-score ' + scoreClass + '">' + scoreLabel + '</span>' +
+    '</div>' +
+    '<div class="proj-item-meta" style="margin-bottom:2px">' +
+      '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">' + subtit + '</span>' +
+    '</div>' +
+    tagsHtml +
+    _bar('PL', pctPlan, corPlan) +
+    _bar('EX', pctExec, corExec) +
+    _bar('EN', pctEnc,  corEnc) +
+  '</div>';
 }
 
 // ── Verificar sessão ao iniciar ──────────────────────────────────────────
