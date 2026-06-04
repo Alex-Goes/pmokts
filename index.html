@@ -5845,9 +5845,10 @@ function _buildSidebarItemHTMLv2(p) {
   const scoreClass = { crit:'proj-score-crit', alert:'proj-score-alert', ok:'proj-score-ok', done:'proj-score-done' }[cl.scoreCls];
   const scoreLabel = cl.score > 0 ? 'P' + Math.min(9, cl.score) : (cl.categoria === 'apto' || cl.categoria === 'concluido' ? '✓' : '—');
 
-  const _cor = pct => pct === 100 ? 'var(--green)' : pct > 60 ? 'var(--accent)' : pct > 30 ? 'var(--yellow)' : 'var(--border2)';
+  // Cor da barra: sempre visível mesmo em 0% (usa cinza claro, não border2 escuro)
+  const _cor = pct => pct === 100 ? '#00e676' : pct > 60 ? '#0066ff' : pct > 30 ? '#ffd600' : '#8a9bb0';
   const corPlan = _cor(pctPlan);
-  const corExec = pctExec === 100 ? 'var(--green)' : pctExec > 0 ? 'var(--yellow)' : 'var(--border2)';
+  const corExec = pctExec === 100 ? '#00e676' : pctExec > 0 ? '#ffd600' : '#8a9bb0';
   const corEnc  = _cor(pctEnc);
 
   const titulo = p.proposta || p.nome || '—';
@@ -5856,11 +5857,14 @@ function _buildSidebarItemHTMLv2(p) {
     ? '<div class="proj-tags">' + cl.tags.slice(0,2).map(t => '<span class="proj-tag ptag-' + t.cls + '">' + t.txt + '</span>').join('') + '</div>'
     : '';
 
+  // Barra com trilho visível + fill colorido
   const _bar = (label, pct, cor) =>
-    '<div style="display:flex;align-items:center;gap:4px;margin-top:3px">' +
-      '<span style="font-size:8px;color:var(--text3);min-width:14px;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.5px">' + label + '</span>' +
-      '<div class="mini-bar" style="flex:1"><div class="mini-bar-fill" style="width:' + pct + '%;background:' + cor + '"></div></div>' +
-      '<span style="font-size:9px;font-weight:700;color:' + cor + ';min-width:26px;text-align:right">' + pct + '%</span>' +
+    '<div style="display:flex;align-items:center;gap:5px;margin-top:4px">' +
+      '<span style="font-size:8px;color:#8a9bb0;min-width:14px;font-family:\'Barlow Condensed\',sans-serif;letter-spacing:.5px;font-weight:600">' + label + '</span>' +
+      '<div style="flex:1;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + cor + ';border-radius:2px;transition:width .3s"></div>' +
+      '</div>' +
+      '<span style="font-size:9px;font-weight:700;color:' + cor + ';min-width:26px;text-align:right;font-family:\'Barlow Condensed\',sans-serif">' + pct + '%</span>' +
     '</div>';
 
   return '<div class="proj-item ' + (p.id===projId?'active':'') + ' ' + prioClass + '" onclick="openProjeto(\'' + p.id + '\')">' +
@@ -5868,7 +5872,7 @@ function _buildSidebarItemHTMLv2(p) {
       '<div class="proj-item-name" style="flex:1;min-width:0">' + titulo + '</div>' +
       '<span class="proj-score ' + scoreClass + '">' + scoreLabel + '</span>' +
     '</div>' +
-    '<div class="proj-item-meta" style="margin-bottom:2px">' +
+    '<div class="proj-item-meta" style="margin-bottom:3px">' +
       '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">' + subtit + '</span>' +
     '</div>' +
     tagsHtml +
