@@ -3616,6 +3616,72 @@ const CRONO_LINHAS = [
   ['fechamentoPrev',       'fechamento',       '🔒', 'Fechamento do Projeto',                'AS Built + 1 dia',      false, false, 'encerramento'],
 ];
 
+
+// ─── Card de Execução em Campo (Início/Término editáveis) ─────────────────
+function _renderExecCard(p, rc, overrides, crono, hoje) {
+  const rcInicio  = (rc && rc.inicioProj)  || '';
+  const rcTermino = (rc && rc.terminoProj) || '';
+  const pvInicio  = (overrides && overrides.inicioProj)  || (crono && crono.inicioProj)  || '';
+  const pvTermino = (overrides && overrides.terminoProj) || (crono && crono.terminoProj) || '';
+  const dI = diffDias(pvInicio,  rcInicio);
+  const dT = diffDias(pvTermino, rcTermino);
+
+  const badge = (prev, real, d) => {
+    if (!prev) return '';
+    if (real) {
+      if (d === 0) return '<span style="color:var(--green);font-size:10px;font-weight:700">✓ No Prazo</span>';
+      if (d > 0)   return '<span style="color:var(--red);font-size:10px;font-weight:700">▲ ' + d + 'd atraso</span>';
+      return '<span style="color:var(--accent);font-size:10px;font-weight:700">⚡ ' + Math.abs(d) + 'd antecip.</span>';
+    }
+    if (prev < hoje) return '<span style="color:var(--red);font-size:10px;font-weight:700">⚠ Atrasado</span>';
+    return '<span style="color:var(--yellow);font-size:10px;font-weight:700">⏳ Pendente</span>';
+  };
+
+  const borderCol = (rcInicio && rcTermino) ? 'rgba(0,230,118,.3)' : rcInicio ? 'rgba(255,214,0,.3)' : 'rgba(255,214,0,.2)';
+  const fmtD = d => d ? '<b style="color:var(--text)">' + fmtDate(d) + '</b>' : '—';
+  const clearBtn = (key) => '<button onclick="salvarRealizado(\'' + key + '\',\'\')" title="Limpar" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:0 2px;line-height:1">✕</button>';
+  const dateInput = (key, val) =>
+    '<input type="date" value="' + val + '" onchange="salvarRealizado(\'' + key + '\',this.value)" ' +
+    'style="flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;color:var(--text);padding:4px 8px;font-size:12px;font-family:\'Barlow\',sans-serif;outline:none">';
+
+  return [
+    '<div style="border:1px solid ' + borderCol + ';border-radius:8px;padding:10px 14px;margin-bottom:10px;background:rgba(255,214,0,.03)">',
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">',
+        '<span style="font-size:11px;font-weight:700;font-family:\'Barlow Condensed\',sans-serif;color:var(--yellow);text-transform:uppercase;letter-spacing:.8px">🟡 Execução em Campo</span>',
+        p.dias ? '<span style="font-size:10px;color:var(--text3)">' + p.dias + ' dias vendidos</span>' : '',
+      '</div>',
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">',
+        // Início do Projeto
+        '<div style="background:var(--card);border-radius:7px;padding:10px 12px;border:1px solid ' + (rcInicio ? 'rgba(0,230,118,.25)' : 'var(--border)') + '">',
+          '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:\'Barlow Condensed\',sans-serif">🚀 Início do Projeto</div>',
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">',
+            '<span style="font-size:11px;color:var(--text2)">Previsto: ' + fmtD(pvInicio) + '</span>',
+            badge(pvInicio, rcInicio, dI),
+          '</div>',
+          '<div style="display:flex;align-items:center;gap:6px">',
+            '<span style="font-size:11px;color:var(--text2);white-space:nowrap">Realizado:</span>',
+            dateInput('inicioProj', rcInicio),
+            rcInicio ? clearBtn('inicioProj') : '',
+          '</div>',
+        '</div>',
+        // Término do Projeto
+        '<div style="background:var(--card);border-radius:7px;padding:10px 12px;border:1px solid ' + (rcTermino ? 'rgba(0,230,118,.25)' : 'var(--border)') + '">',
+          '<div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-family:\'Barlow Condensed\',sans-serif">🏁 Término do Projeto</div>',
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">',
+            '<span style="font-size:11px;color:var(--text2)">Previsto: ' + fmtD(pvTermino) + '</span>',
+            badge(pvTermino, rcTermino, dT),
+          '</div>',
+          '<div style="display:flex;align-items:center;gap:6px">',
+            '<span style="font-size:11px;color:var(--text2);white-space:nowrap">Realizado:</span>',
+            dateInput('terminoProj', rcTermino),
+            rcTermino ? clearBtn('terminoProj') : '',
+          '</div>',
+        '</div>',
+      '</div>',
+    '</div>',
+  ].join('');
+}
+
 // ─── RENDER FLUXO (com dashboard de gestão visual) ───
 function renderFluxo(p) {
   const rc      = p.cronoRealizado || {};
@@ -3878,6 +3944,7 @@ function renderFluxo(p) {
           ${[
             { id:'planejamento', icon:'🔵', label:'Planejamento', cor:'#0066ff' },
             { id:'encerramento', icon:'🟢', label:'Encerramento', cor:'var(--green)' },
+            { id:'execucao',     icon:'🟡', label:'Execução',     cor:'var(--yellow)' },
           ].map(f => {
             const pf = calcFluxoPctFase(p, f.id);
             const corF = pf === 100 ? 'var(--green)' : pf > 60 ? f.cor : pf > 30 ? 'var(--yellow)' : 'var(--border2)';
@@ -3892,19 +3959,7 @@ function renderFluxo(p) {
             </div>`;
           }).join('')}
         </div>
-        <!-- Execução: exibe só as datas, sem barra -->
-        <div style="background:var(--bg2);border:1px solid rgba(0,212,255,.2);border-radius:8px;padding:8px 14px;margin-bottom:10px;
-          display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-          <span style="font-size:11px;font-weight:700;font-family:'Barlow Condensed',sans-serif;color:var(--accent);text-transform:uppercase;letter-spacing:.8px">🚀 Execução em Campo</span>
-          <span style="font-size:11px;color:var(--text2)">
-            Início: <b style="color:var(--accent)">${crono.inicioProj ? fmtDate(crono.inicioProj) : '—'}</b>
-          </span>
-          <span style="font-size:11px;color:var(--text2)">
-            Término: <b style="color:var(--accent)">${crono.terminoProj ? fmtDate(crono.terminoProj) : '—'}</b>
-          </span>
-          ${p.dias ? `<span style="font-size:11px;color:var(--text3)">${p.dias} dias vendidos</span>` : ''}
-          <span style="font-size:10px;color:var(--text3);margin-left:auto;font-style:italic">Avanço gerenciado externamente</span>
-        </div>
+        ${_renderExecCard(p, rc, overrides, crono, hoje)}
         <div class="fdash-progress-header">
           <div class="fdash-progress-title">📊 Progresso Geral do Fluxo</div>
           <div class="fdash-progress-pct">${pctGeral}%</div>
@@ -4388,6 +4443,31 @@ function saveCronoRealizado(key, value) {
   if (!p.cronoRealizado) p.cronoRealizado = {};
   p.cronoRealizado[key] = value;
   saveAsync(projId);
+}
+
+// salvarRealizado — alias público para uso inline nos cards de execução e fluxo
+// Aceita qualquer chave de cronoRealizado (inicioProj, terminoProj, etc.)
+function salvarRealizado(key, value) {
+  const p = getProjeto();
+  if (!p) return;
+  _invalidarCacheClassif(projId);
+  if (!p.cronoRealizado) p.cronoRealizado = {};
+  if (value === '' || value === null) {
+    delete p.cronoRealizado[key];
+  } else {
+    p.cronoRealizado[key] = value;
+  }
+  saveAsync(projId);
+  // Re-renderiza o fluxo para refletir novo status imediatamente
+  requestAnimationFrame(() => {
+    try {
+      const el = document.getElementById('tab-content');
+      if (el && currentTab === 'fluxo') {
+        el.innerHTML = renderFluxo(getProjeto());
+        bindFluxoEventos(getProjeto());
+      }
+    } catch(e) { console.warn('salvarRealizado refresh:', e); }
+  });
 }
 
 function updateCronoInput(field, value) {
@@ -6901,7 +6981,7 @@ function renderGanttExecucao(p) {
 // RENDER FLUXO POR FASE — agrupa as linhas da tabela em 3 seções
 // ═══════════════════════════════════════════════════════════════════
 function renderLinhasFluxoPorFase(linhasHTML, etapasStatus, p, crono, overrides) {
-  // Mostra apenas Planejamento e Encerramento — Execução (Início/Término) é gerenciada externamente
+  // Renderiza Planejamento, Execução (Início/Término) e Encerramento
   const FASES = [
     {
       id:    'planejamento',
@@ -6911,6 +6991,15 @@ function renderLinhasFluxoPorFase(linhasHTML, etapasStatus, p, crono, overrides)
       cor:   '#0066ff',
       bg:    'rgba(0,102,255,.06)',
       border:'rgba(0,102,255,.25)',
+    },
+    {
+      id:    'execucao',
+      icon:  '🟡',
+      label: 'Execução',
+      desc:  'Período de campo — Início e Término do projeto',
+      cor:   'var(--yellow)',
+      bg:    'rgba(255,214,0,.05)',
+      border:'rgba(255,214,0,.2)',
     },
     {
       id:    'encerramento',
