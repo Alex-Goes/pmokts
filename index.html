@@ -2744,26 +2744,29 @@ function updateSidebarItem(id) {
 // Cache de calcFluxoPct por projeto (key = id + _updatedAt)
 const _fluxoPctCache = {};
 const _classifCache = {}; // cache de classificação { id+_updatedAt → resultado }
+// Versão da lógica de cálculo — incrementar força re-cálculo em clientes com cache antigo
+const _CALC_VERSION = 'v2-na100';
 
 /**
  * Calcula % de avanço de uma fase específica: 'planejamento' | 'execucao' | 'encerramento' | null (todas)
  */
 function calcFluxoPctFase(proj, fase) {
-  const cacheKey = proj.id + '|' + (proj._updatedAt || '0') + '|' + (fase || 'all');
+  const cacheKey = proj.id + '|' + (proj._updatedAt || '0') + '|' + (fase || 'all') + '|' + _CALC_VERSION;
   if (_fluxoPctCache[cacheKey] !== undefined) return _fluxoPctCache[cacheKey];
 
   const rc       = proj.cronoRealizado || {};
   const na       = proj.cronoNA        || {};
   const cronoPct = proj.cronoPct       || {};
 
-  const linhas = CRONO_LINHAS.filter(l => !na[l[0]] && (!fase || l[7] === fase));
+  const linhas = CRONO_LINHAS.filter(l => !fase || l[7] === fase);
   const total  = linhas.length;
   if (!total) return 0;
 
   let soma = 0;
   linhas.forEach(l => {
     const [chaveCalc, chaveReal,,,,, hasPct] = l;
-    if (rc[chaveReal])                                          soma += 100;
+    if (na[chaveCalc])                                          soma += 100; // N/A = 100%
+    else if (rc[chaveReal])                                     soma += 100;
     else if (hasPct && cronoPct[chaveCalc] !== undefined)       soma += Math.min(100, Math.max(0, parseInt(cronoPct[chaveCalc]) || 0));
   });
 
